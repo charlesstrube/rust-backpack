@@ -3,7 +3,7 @@ use std::fmt::{Debug, Formatter, Result};
 pub enum InventoryError {
     BackpackFull,
     ItemNotFound,
-    NotEnoughWeight,
+    WouldExceedCapacity,
 }
 
 impl Debug for InventoryError {
@@ -11,7 +11,7 @@ impl Debug for InventoryError {
         match self {
             Self::BackpackFull => write!(f, "BackoackFull"),
             Self::ItemNotFound => write!(f, "ItemNotFound"),
-            Self::NotEnoughWeight => write!(f, "NotEnoughWeight"),
+            Self::WouldExceedCapacity => write!(f, "WouldExceedCapacity"),
         }
     }
 }
@@ -22,7 +22,7 @@ impl PartialEq for InventoryError {
             (self, other),
             (Self::BackpackFull, Self::BackpackFull)
                 | (Self::ItemNotFound, Self::ItemNotFound)
-                | (Self::NotEnoughWeight, Self::NotEnoughWeight)
+                | (Self::WouldExceedCapacity, Self::WouldExceedCapacity)
         )
     }
 }

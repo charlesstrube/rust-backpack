@@ -67,7 +67,7 @@ impl Backpack {
 
     pub fn set_max_weight(&mut self, max_weight: u32) -> Result<(), InventoryError> {
         if self.total_weight() > max_weight {
-            return Err(InventoryError::NotEnoughWeight);
+            return Err(InventoryError::WouldExceedCapacity);
         }
 
         self.max_weight = max_weight;
