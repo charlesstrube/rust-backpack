@@ -2,13 +2,12 @@ use crate::error::InventoryError;
 use crate::item::{Item, ItemKind, Rarity};
 
 pub struct Backpack {
-    pub items: Vec<Item>,
-    pub max_weight: u32,
+    items: Vec<Item>,
+    max_weight: u32,
 }
 
 impl Backpack {
     pub fn new(max_weight: u32) -> Self {
-        // TODO (FR): construit un Backpack vide avec la capacité max donnée.
         Self {
             items: Vec::new(),
             max_weight,
@@ -17,7 +16,7 @@ impl Backpack {
 
     pub fn add_item(&mut self, item: Item) -> Result<(), InventoryError> {
         let total_weight = self.total_weight();
-        if self.max_weight - total_weight >= item.weight {
+        if self.max_weight - total_weight >= item.weight() {
             self.items.push(item);
             Ok(())
         } else {
@@ -28,13 +27,13 @@ impl Backpack {
     pub fn remove_item(&mut self, name: &str) -> Result<Item, InventoryError> {
         let mut index_found: Option<usize> = None;
         for (index, item) in self.items.iter().enumerate() {
-            if item.name == name {
+            if item.name() == name {
                 index_found = Some(index);
             }
         }
 
-        if index_found.is_some() {
-            Ok(self.items.remove(index_found.unwrap()))
+        if let Some(value) = index_found {
+            Ok(self.items.remove(value))
         } else {
             Err(InventoryError::ItemNotFound)
         }
@@ -43,7 +42,7 @@ impl Backpack {
     pub fn total_weight(&self) -> u32 {
         let mut total_weight = 0;
         for item in &self.items {
-            total_weight += item.weight;
+            total_weight += item.weight();
         }
         total_weight
     }
@@ -51,33 +50,52 @@ impl Backpack {
     pub fn count_by_rarity(&self, rarity: Rarity) -> usize {
         let mut count: usize = 0;
         for item in self.items.iter() {
-            if item.rarity == rarity {
+            if item.rarity() == rarity {
                 count += 1;
             }
         }
         count
     }
 
+    pub fn items(&self) -> &[Item] {
+        &self.items
+    }
+
+    pub fn max_weight(&self) -> u32 {
+        self.max_weight
+    }
+
+    pub fn set_max_weight(&mut self, max_weight: u32) -> Result<(), InventoryError> {
+        if self.total_weight() > max_weight {
+            return Err(InventoryError::NotEnoughWeight);
+        }
+
+        self.max_weight = max_weight;
+        Ok(())
+    }
+
+    pub fn reserve(&mut self, additional: usize) {
+        self.items.reserve(additional)
+    }
+
     pub fn strongest_weapon(&self) -> Option<&Item> {
         let mut strongest_weapon: Option<&Item> = None;
         for item in self.items.iter() {
-            match item.kind {
-                ItemKind::Weapon {
-                    damage: current_damage,
-                } => match strongest_weapon {
-                    Some(weapon) => {
-                        if let ItemKind::Weapon {
-                            damage: strongest_damage,
-                        } = weapon.kind
-                        {
-                            if strongest_damage < current_damage {
-                                strongest_weapon = Some(item)
-                            }
-                        }
+            if let ItemKind::Weapon {
+                damage: current_damage,
+            } = item.kind()
+            {
+                if let Some(weapon) = strongest_weapon {
+                    if let ItemKind::Weapon {
+                        damage: strongest_damage,
+                    } = weapon.kind()
+                        && strongest_damage < current_damage
+                    {
+                        strongest_weapon = Some(item)
                     }
-                    None => strongest_weapon = Some(item),
-                },
-                _ => (),
+                } else {
+                    strongest_weapon = Some(item)
+                }
             }
         }
         strongest_weapon
@@ -86,35 +104,28 @@ impl Backpack {
     pub fn total_value(&self) -> u32 {
         let mut total_value = 0;
         for item in self.items.iter() {
-            let value = match item.rarity {
+            let value = match item.rarity() {
                 Rarity::Common => 1,
                 Rarity::Rare => 2,
                 Rarity::Epic => 5,
                 Rarity::Legendary => 10,
             };
 
-            total_value += value * item.weight;
+            total_value += value * item.weight();
         }
 
         total_value
     }
 
     pub fn find_by_name(&self, name: &str) -> Option<&Item> {
-        // TODO (FR): renvoie une référence vers le premier item dont le nom correspond,
-        // ou None s'il n'existe pas. Vise une seule expression avec un itérateur.
-        self.items.iter().find(|&item| item.name == name)
+        self.items.iter().find(|&item| item.name() == name)
     }
 
     pub fn weapons(&self) -> Vec<&Item> {
-        // TODO (FR): renvoie un Vec contenant des références vers tous les items
-        // dont le `kind` est une Weapon. Filtre et collecte.
-        let result = self
-            .items
+        self.items
             .iter()
-            .filter(|&item| matches!(item.kind, ItemKind::Weapon { damage: _damage }))
-            .collect();
-
-        result
+            .filter(|&item| matches!(item.kind(), ItemKind::Weapon { damage: _damage }))
+            .collect()
     }
 }
 
@@ -142,39 +153,39 @@ mod tests {
     use crate::item::ItemKind;
 
     fn sword() -> Item {
-        Item {
-            name: "Sword".to_string(),
-            kind: ItemKind::Weapon { damage: 50 },
-            rarity: Rarity::Epic,
-            weight: 5,
-        }
+        Item::new(
+            "Sword".to_string(),
+            ItemKind::Weapon { damage: 50 },
+            Rarity::Epic,
+            5,
+        )
     }
 
     fn dagger() -> Item {
-        Item {
-            name: "Dagger".to_string(),
-            kind: ItemKind::Weapon { damage: 15 },
-            rarity: Rarity::Common,
-            weight: 2,
-        }
+        Item::new(
+            "Dagger".to_string(),
+            ItemKind::Weapon { damage: 15 },
+            Rarity::Common,
+            2,
+        )
     }
 
     fn potion() -> Item {
-        Item {
-            name: "Health Potion".to_string(),
-            kind: ItemKind::Potion { healing: 25 },
-            rarity: Rarity::Common,
-            weight: 1,
-        }
+        Item::new(
+            "Health Potion".to_string(),
+            ItemKind::Potion { healing: 25 },
+            Rarity::Common,
+            1,
+        )
     }
 
     fn shield() -> Item {
-        Item {
-            name: "Shield".to_string(),
-            kind: ItemKind::Armor { defense: 30 },
-            rarity: Rarity::Rare,
-            weight: 10,
-        }
+        Item::new(
+            "Shield".to_string(),
+            ItemKind::Armor { defense: 30 },
+            Rarity::Rare,
+            10,
+        )
     }
 
     #[test]
@@ -245,7 +256,7 @@ mod tests {
         bag.add_item(sword()).unwrap();
         bag.add_item(potion()).unwrap();
         let best = bag.strongest_weapon().unwrap();
-        assert_eq!(best.name, "Sword");
+        assert_eq!(best.name(), "Sword");
     }
 
     #[test]
@@ -271,7 +282,7 @@ mod tests {
         bag.add_item(sword()).unwrap();
         bag.add_item(potion()).unwrap();
         let found = bag.find_by_name("Sword").unwrap();
-        assert_eq!(found.name, "Sword");
+        assert_eq!(found.name(), "Sword");
     }
 
     #[test]
@@ -290,8 +301,8 @@ mod tests {
         bag.add_item(shield()).unwrap();
         let weapons = bag.weapons();
         assert_eq!(weapons.len(), 2);
-        assert!(weapons.iter().any(|w| w.name == "Sword"));
-        assert!(weapons.iter().any(|w| w.name == "Dagger"));
+        assert!(weapons.iter().any(|w| w.name() == "Sword"));
+        assert!(weapons.iter().any(|w| w.name() == "Dagger"));
     }
 
     #[test]
@@ -312,9 +323,383 @@ mod tests {
         let mut bag = Backpack::new(100);
         bag.add_item(sword()).unwrap();
         bag.add_item(potion()).unwrap();
-        let names: Vec<String> = bag.into_iter().map(|item| item.name).collect();
+        let names: Vec<String> = bag
+            .into_iter()
+            .map(|item| item.name().to_string())
+            .collect();
         assert_eq!(names.len(), 2);
         assert!(names.contains(&"Sword".to_string()));
         assert!(names.contains(&"Health Potion".to_string()));
     }
+
+    // =====================================================================
+    // PHASE 1 — Encapsulation: Backpack getter, setter, reserve
+    // =====================================================================
+
+    #[test]
+    fn backpack_items_getter_exposes_slice() {
+        let mut bag = Backpack::new(100);
+        bag.add_item(sword()).unwrap();
+        bag.add_item(potion()).unwrap();
+        let items: &[Item] = bag.items();
+        assert_eq!(items.len(), 2);
+    }
+
+    #[test]
+    fn backpack_set_max_weight_accepts_increase() {
+        let mut bag = Backpack::new(50);
+        assert!(bag.set_max_weight(100).is_ok());
+        assert_eq!(bag.max_weight(), 100);
+    }
+
+    #[test]
+    fn backpack_set_max_weight_rejects_below_current_load() {
+        let mut bag = Backpack::new(100);
+        bag.add_item(shield()).unwrap();
+        bag.add_item(sword()).unwrap();
+        assert!(bag.set_max_weight(10).is_err());
+        assert_eq!(bag.max_weight(), 100);
+    }
+
+    #[test]
+    fn reserve_increases_capacity_without_changing_len() {
+        let mut bag = Backpack::new(100);
+        bag.add_item(sword()).unwrap();
+        let len_before = bag.items().len();
+        bag.reserve(64);
+        assert_eq!(bag.items().len(), len_before);
+    }
+
+    // =====================================================================
+    // PHASE 2 — Backpack::new validated
+    // =====================================================================
+
+    // #[test]
+    // fn backpack_new_rejects_zero_max_weight() {
+    //     assert!(Backpack::new(0).is_err());
+    // }
+
+    // =====================================================================
+    // PHASE 3 — Saturating / checked arithmetic, casting, factorial
+    // =====================================================================
+
+    // #[test]
+    // fn total_weight_saturating_caps_at_u32_max() {
+    //     let mut bag = Backpack::new(u32::MAX).unwrap();
+    //     // build two giant items so the naive sum would overflow u32
+    //     let heavy_a = Item::new(
+    //         "A".into(),
+    //         ItemKind::Armor { defense: 1 },
+    //         Rarity::Common,
+    //         u32::MAX,
+    //     )
+    //     .unwrap();
+    //     let heavy_b = Item::new(
+    //         "B".into(),
+    //         ItemKind::Armor { defense: 1 },
+    //         Rarity::Common,
+    //         10,
+    //     )
+    //     .unwrap();
+    //     // bypass capacity check by pushing directly through bulk_add if needed,
+    //     // or temporarily raise max — adapt to your design
+    //     bag.bulk_add(&[heavy_a, heavy_b]).ok();
+    //     assert_eq!(bag.total_weight_saturating(), u32::MAX);
+    // }
+
+    // #[test]
+    // fn total_weight_checked_returns_none_on_overflow() {
+    //     let mut bag = Backpack::new(u32::MAX).unwrap();
+    //     let heavy_a = Item::new(
+    //         "A".into(),
+    //         ItemKind::Armor { defense: 1 },
+    //         Rarity::Common,
+    //         u32::MAX,
+    //     )
+    //     .unwrap();
+    //     let heavy_b = Item::new(
+    //         "B".into(),
+    //         ItemKind::Armor { defense: 1 },
+    //         Rarity::Common,
+    //         10,
+    //     )
+    //     .unwrap();
+    //     bag.bulk_add(&[heavy_a, heavy_b]).ok();
+    //     assert_eq!(bag.total_weight_checked(), None);
+    // }
+
+    // #[test]
+    // fn average_weight_returns_zero_for_empty_backpack() {
+    //     let bag = Backpack::new(100).unwrap();
+    //     assert_eq!(bag.average_weight(), 0.0);
+    // }
+
+    // #[test]
+    // fn average_weight_computes_mean() {
+    //     let mut bag = Backpack::new(100).unwrap();
+    //     bag.add_item(sword()).unwrap();   // 5
+    //     bag.add_item(potion()).unwrap();  // 1
+    //     // (5 + 1) / 2 = 3.0
+    //     assert_eq!(bag.average_weight(), 3.0);
+    // }
+
+    // #[test]
+    // fn factorial_of_five_is_one_hundred_twenty() {
+    //     assert_eq!(factorial(0), 1);
+    //     assert_eq!(factorial(1), 1);
+    //     assert_eq!(factorial(5), 120);
+    //     assert_eq!(factorial(10), 3_628_800);
+    // }
+
+    // #[test]
+    // fn slot_combinations_uses_factorial() {
+    //     let mut bag = Backpack::new(100).unwrap();
+    //     bag.add_item(sword()).unwrap();
+    //     bag.add_item(potion()).unwrap();
+    //     bag.add_item(shield()).unwrap();
+    //     // C(3, 2) = 3! / (2! * 1!) = 3
+    //     assert_eq!(bag.slot_combinations(2), 3);
+    // }
+
+    // =====================================================================
+    // PHASE 4 — Derive macros smoke test
+    // =====================================================================
+
+    // #[test]
+    // fn rarity_works_as_hashmap_key() {
+    //     use std::collections::HashMap;
+    //     let mut counts: HashMap<Rarity, u32> = HashMap::new();
+    //     *counts.entry(Rarity::Common).or_insert(0) += 1;
+    //     *counts.entry(Rarity::Common).or_insert(0) += 1;
+    //     *counts.entry(Rarity::Epic).or_insert(0) += 1;
+    //     assert_eq!(counts.get(&Rarity::Common), Some(&2));
+    //     assert_eq!(counts.get(&Rarity::Epic), Some(&1));
+    //     assert_eq!(counts.get(&Rarity::Legendary), None);
+    // }
+
+    // =====================================================================
+    // PHASE 8 — Drop counter
+    // =====================================================================
+
+    // #[test]
+    // fn dropping_backpack_increments_drop_counter() {
+    //     let before = dropped_count();
+    //     {
+    //         let _bag = Backpack::new(50).unwrap();
+    //     }
+    //     assert_eq!(dropped_count(), before + 1);
+    // }
+
+    // =====================================================================
+    // PHASE 9 — Slices, lifetimes, impl Trait
+    // =====================================================================
+
+    // #[test]
+    // fn as_slice_returns_all_items() {
+    //     let mut bag = Backpack::new(100).unwrap();
+    //     bag.add_item(sword()).unwrap();
+    //     bag.add_item(potion()).unwrap();
+    //     let slice: &[Item] = bag.as_slice();
+    //     assert_eq!(slice.len(), 2);
+    // }
+
+    // #[test]
+    // fn as_mut_slice_allows_sort_in_place() {
+    //     let mut bag = Backpack::new(100).unwrap();
+    //     bag.add_item(sword()).unwrap();   // 5
+    //     bag.add_item(shield()).unwrap();  // 10
+    //     bag.add_item(potion()).unwrap();  // 1
+    //     bag.as_mut_slice().sort_by_key(|i| i.weight());
+    //     assert_eq!(bag.as_slice()[0].name(), "Health Potion");
+    //     assert_eq!(bag.as_slice()[1].name(), "Sword");
+    //     assert_eq!(bag.as_slice()[2].name(), "Shield");
+    // }
+
+    // #[test]
+    // fn bulk_add_accepts_slice() {
+    //     let mut bag = Backpack::new(100).unwrap();
+    //     let items = [sword(), potion(), shield()];
+    //     bag.bulk_add(&items).unwrap();
+    //     assert_eq!(bag.as_slice().len(), 3);
+    // }
+
+    // #[test]
+    // fn bulk_add_rejects_when_capacity_exceeded() {
+    //     let mut bag = Backpack::new(5).unwrap();
+    //     let items = [sword(), shield()]; // 5 + 10 > 5
+    //     assert!(bag.bulk_add(&items).is_err());
+    // }
+
+    // #[test]
+    // fn find_all_returns_filtered_iterator() {
+    //     let mut bag = Backpack::new(100).unwrap();
+    //     bag.add_item(sword()).unwrap();   // "Sword" contains 'o'
+    //     bag.add_item(potion()).unwrap();  // "Health Potion" contains 'o'
+    //     bag.add_item(dagger()).unwrap();  // "Dagger" does not contain 'o'
+    //     let matches: Vec<&Item> = bag.find_all("o").collect();
+    //     assert_eq!(matches.len(), 2);
+    // }
+
+    // #[test]
+    // fn heaviest_returns_top_n_in_descending_order() {
+    //     let mut bag = Backpack::new(100).unwrap();
+    //     bag.add_item(sword()).unwrap();   // 5
+    //     bag.add_item(potion()).unwrap();  // 1
+    //     bag.add_item(shield()).unwrap();  // 10
+    //     let top2 = bag.heaviest(2);
+    //     assert_eq!(top2.len(), 2);
+    //     assert_eq!(top2[0].weight(), 10);
+    //     assert_eq!(top2[1].weight(), 5);
+    // }
+
+    // #[test]
+    // fn heaviest_caps_at_available_items() {
+    //     let mut bag = Backpack::new(100).unwrap();
+    //     bag.add_item(sword()).unwrap();
+    //     assert_eq!(bag.heaviest(10).len(), 1);
+    // }
+
+    // =====================================================================
+    // PHASE 10 — Index / IndexMut
+    // =====================================================================
+
+    // #[test]
+    // fn index_by_position_returns_item() {
+    //     let mut bag = Backpack::new(100).unwrap();
+    //     bag.add_item(sword()).unwrap();
+    //     bag.add_item(potion()).unwrap();
+    //     assert_eq!(bag[0].name(), "Sword");
+    //     assert_eq!(bag[1].name(), "Health Potion");
+    // }
+
+    // #[test]
+    // fn index_by_name_returns_item() {
+    //     let mut bag = Backpack::new(100).unwrap();
+    //     bag.add_item(sword()).unwrap();
+    //     bag.add_item(potion()).unwrap();
+    //     assert_eq!(bag["Sword"].weight(), 5);
+    //     assert_eq!(bag["Health Potion"].weight(), 1);
+    // }
+
+    // #[test]
+    // #[should_panic]
+    // fn index_by_unknown_name_panics() {
+    //     let bag = Backpack::new(100).unwrap();
+    //     let _ = &bag["NotHere"];
+    // }
+
+    // #[test]
+    // fn index_mut_allows_field_update() {
+    //     let mut bag = Backpack::new(100).unwrap();
+    //     bag.add_item(sword()).unwrap();
+    //     bag[0] = potion();
+    //     assert_eq!(bag[0].name(), "Health Potion");
+    // }
+
+    // =====================================================================
+    // PHASE 11 — Backpack::add (operator overloading)
+    // =====================================================================
+
+    // #[test]
+    // fn backpack_add_merges_max_weight_and_items() {
+    //     let mut a = Backpack::new(50).unwrap();
+    //     let mut b = Backpack::new(30).unwrap();
+    //     a.add_item(sword()).unwrap();
+    //     b.add_item(potion()).unwrap();
+    //     let merged = a + b;
+    //     assert_eq!(merged.max_weight(), 80);
+    //     assert_eq!(merged.as_slice().len(), 2);
+    // }
+
+    // =====================================================================
+    // PHASE 12 — HashMap / BTreeMap
+    // =====================================================================
+
+    // #[test]
+    // fn group_by_rarity_buckets_correctly() {
+    //     let mut bag = Backpack::new(100).unwrap();
+    //     bag.add_item(sword()).unwrap();   // Epic
+    //     bag.add_item(potion()).unwrap();  // Common
+    //     bag.add_item(dagger()).unwrap();  // Common
+    //     let groups = bag.group_by_rarity();
+    //     assert_eq!(groups.get(&Rarity::Common).unwrap().len(), 2);
+    //     assert_eq!(groups.get(&Rarity::Epic).unwrap().len(), 1);
+    //     assert!(groups.get(&Rarity::Legendary).is_none());
+    // }
+
+    // #[test]
+    // fn weights_by_value_orders_keys_ascending() {
+    //     let mut bag = Backpack::new(100).unwrap();
+    //     bag.add_item(shield()).unwrap();  // 10
+    //     bag.add_item(sword()).unwrap();   // 5
+    //     bag.add_item(potion()).unwrap();  // 1
+    //     let map = bag.weights_by_value();
+    //     let keys: Vec<u32> = map.keys().copied().collect();
+    //     assert_eq!(keys, vec![1, 5, 10]);
+    // }
+
+    // #[test]
+    // fn most_common_rarity_returns_top_bucket() {
+    //     let mut bag = Backpack::new(100).unwrap();
+    //     bag.add_item(potion()).unwrap();  // Common
+    //     bag.add_item(dagger()).unwrap();  // Common
+    //     bag.add_item(sword()).unwrap();   // Epic
+    //     assert_eq!(bag.most_common_rarity(), Some(Rarity::Common));
+    // }
+
+    // #[test]
+    // fn most_common_rarity_returns_none_for_empty() {
+    //     let bag = Backpack::new(100).unwrap();
+    //     assert!(bag.most_common_rarity().is_none());
+    // }
+
+    // =====================================================================
+    // PHASE 13 — Generics & trait bounds
+    // =====================================================================
+
+    // #[test]
+    // fn add_many_accepts_vec() {
+    //     let mut bag = Backpack::new(100).unwrap();
+    //     let items = vec![sword(), potion()];
+    //     bag.add_many(items).unwrap();
+    //     assert_eq!(bag.as_slice().len(), 2);
+    // }
+
+    // #[test]
+    // fn add_many_accepts_fixed_size_array() {
+    //     let mut bag = Backpack::new(100).unwrap();
+    //     let items: [Item; 2] = [sword(), potion()];
+    //     bag.add_many(items).unwrap();
+    //     assert_eq!(bag.as_slice().len(), 2);
+    // }
+
+    // #[test]
+    // fn add_many_accepts_iterator_chain() {
+    //     let mut bag = Backpack::new(100).unwrap();
+    //     let chain = std::iter::once(sword()).chain(std::iter::once(potion()));
+    //     bag.add_many(chain).unwrap();
+    //     assert_eq!(bag.as_slice().len(), 2);
+    // }
+
+    // =====================================================================
+    // PHASE 14 — Combinators
+    // =====================================================================
+
+    // #[test]
+    // fn total_damage_sums_only_weapon_damage() {
+    //     let mut bag = Backpack::new(100).unwrap();
+    //     bag.add_item(sword()).unwrap();   // 50
+    //     bag.add_item(dagger()).unwrap();  // 15
+    //     bag.add_item(potion()).unwrap();  // not a weapon
+    //     bag.add_item(shield()).unwrap();  // not a weapon
+    //     assert_eq!(bag.total_damage(), 65);
+    // }
+
+    // #[test]
+    // fn total_damage_is_zero_without_weapons() {
+    //     let mut bag = Backpack::new(100).unwrap();
+    //     bag.add_item(potion()).unwrap();
+    //     bag.add_item(shield()).unwrap();
+    //     assert_eq!(bag.total_damage(), 0);
+    // }
 }
