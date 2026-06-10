@@ -22,14 +22,8 @@ impl Item {
         rarity: Rarity,
         weight: u32,
     ) -> Result<Self, InventoryError> {
-        let name = match ItemName::try_from(name) {
-            Ok(name) => name,
-            Err(error) => return Err(InventoryError::from(error)),
-        };
-        let weight = match ItemWeight::try_from(weight) {
-            Ok(weight) => weight,
-            Err(error) => return Err(InventoryError::from(error)),
-        };
+        let name = ItemName::try_from(name)?;
+        let weight = ItemWeight::try_from(weight)?;
 
         Ok(Self {
             name,
@@ -150,12 +144,7 @@ mod tests {
 
     #[test]
     fn item_new_rejects_empty_name() {
-        let item = Item::new(
-            String::new().as_str(),
-            ItemKind::Weapon { damage: 50 },
-            Rarity::Epic,
-            5,
-        );
+        let item = Item::new("", ItemKind::Weapon { damage: 50 }, Rarity::Epic, 5);
         assert!(item.is_err());
     }
 

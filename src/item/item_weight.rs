@@ -15,7 +15,7 @@ impl ItemWeight {
 impl TryFrom<u32> for ItemWeight {
     type Error = ItemWeightError;
     fn try_from(value: u32) -> Result<Self, Self::Error> {
-        if value <= 0 {
+        if value == 0 {
             return Err(ItemWeightError::WeightIsZero);
         }
         Ok(Self(value))

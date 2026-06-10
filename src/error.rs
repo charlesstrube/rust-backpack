@@ -4,12 +4,11 @@ use crate::item::{item_name::ItemNameError, item_weight::ItemWeightError};
 
 pub enum InventoryError {
     BackpackFull,
-    BackpackEmpty,
+    InvalidMaxWeight,
     ItemNotFound,
     WouldExceedCapacity,
     InvalidName,
     InvalidWeight,
-    InvalidMaxWeight,
 }
 
 impl Debug for InventoryError {
@@ -19,9 +18,8 @@ impl Debug for InventoryError {
             Self::ItemNotFound => write!(f, "ItemNotFound"),
             Self::WouldExceedCapacity => write!(f, "WouldExceedCapacity"),
             Self::InvalidName => write!(f, "InvalidName"),
-            Self::BackpackEmpty => write!(f, "BackpackEmpty"),
-            Self::InvalidWeight => write!(f, "InvalidWeight"),
             Self::InvalidMaxWeight => write!(f, "InvalidMaxWeight"),
+            Self::InvalidWeight => write!(f, "InvalidWeight"),
         }
     }
 }
@@ -47,8 +45,11 @@ impl PartialEq for InventoryError {
         matches!(
             (self, other),
             (Self::BackpackFull, Self::BackpackFull)
+                | (Self::InvalidMaxWeight, Self::InvalidMaxWeight)
                 | (Self::ItemNotFound, Self::ItemNotFound)
                 | (Self::WouldExceedCapacity, Self::WouldExceedCapacity)
+                | (Self::InvalidName, Self::InvalidName)
+                | (Self::InvalidWeight, Self::InvalidWeight)
         )
     }
 }

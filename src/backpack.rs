@@ -10,8 +10,8 @@ pub struct Backpack {
 
 impl Backpack {
     pub fn new(max_weight: u32) -> Result<Self, InventoryError> {
-        if max_weight <= 0 {
-            return Err(InventoryError::BackpackEmpty);
+        if max_weight == 0 {
+            return Err(InventoryError::InvalidMaxWeight);
         }
 
         Ok(Self {
@@ -22,6 +22,9 @@ impl Backpack {
 
     pub fn add_item(&mut self, item: Item) -> Result<(), InventoryError> {
         let total_weight = self.total_weight();
+        if self.max_weight < total_weight {
+            unreachable!()
+        }
         if self.max_weight - total_weight >= item.weight() {
             self.items.push(item);
             Ok(())

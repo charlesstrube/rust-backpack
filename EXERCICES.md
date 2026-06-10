@@ -11,12 +11,12 @@ Tu peux dévier l'ordre, mais **la Phase 4 doit passer avant les Phases 12 et 13
 ## Phase 1 — Encapsulation, accesseurs, setters
 Concepts : encapsulation, accessor methods, setters, visibility, string slices, vec resizing
 
-- [ ] Rendre privés les champs de `Backpack` et `Item`
-- [ ] Getters sur `Item` : `name()`, `kind()`, `rarity()`, `weight()`
-- [ ] `Backpack::items()` retournant `&[Item]`
-- [ ] `Backpack::max_weight()` getter
-- [ ] `Backpack::set_max_weight(&mut self, value: u32) -> Result<(), InventoryError>` qui refuse une valeur inférieure au poids total actuel
-- [ ] `Backpack::reserve(&mut self, additional: usize)` qui expose le redimensionnement du Vec
+- [x] Rendre privés les champs de `Backpack` et `Item`
+- [x] Getters sur `Item` : `name()`, `kind()`, `rarity()`, `weight()`
+- [x] `Backpack::items()` retournant `&[Item]`
+- [x] `Backpack::max_weight()` getter
+- [x] `Backpack::set_max_weight(&mut self, value: u32) -> Result<(), InventoryError>` qui refuse une valeur inférieure au poids total actuel
+- [x] `Backpack::reserve(&mut self, additional: usize)` qui expose le redimensionnement du Vec
 
 Tests :
 - `item_getters_return_field_values`
@@ -36,9 +36,9 @@ Cette mini-phase prépare le terrain pour que `Item::new` (Phase 2) puisse utili
 
 Contexte : tu as déjà un type d'erreur côté newtype (`ItemNameError::NameIsEmpty`) côté `ItemName::try_from`. Il faut pouvoir le **convertir** vers `InventoryError` pour que `?` fonctionne dans `Item::new`.
 
-- [ ] Ajouter le variant `InvalidName` à `InventoryError` (les autres variants `InvalidWeight`, `InvalidMaxWeight` viendront en Phase 2)
-- [ ] Implémenter `impl From<ItemNameError> for InventoryError` à la main — mappe `NameIsEmpty` → `InvalidName`
-- [ ] Vérifier mentalement que `let name: ItemName = some_string.try_into()?;` compile désormais dans un contexte où la fonction retourne `Result<_, InventoryError>`
+- [x] Ajouter le variant `InvalidName` à `InventoryError` (les autres variants `InvalidWeight`, `InvalidMaxWeight` viendront en Phase 2)
+- [x] Implémenter `impl From<ItemNameError> for InventoryError` à la main — mappe `NameIsEmpty` → `InvalidName`
+- [x] Vérifier mentalement que `let name: ItemName = some_string.try_into()?;` compile désormais dans un contexte où la fonction retourne `Result<_, InventoryError>`
 
 Tests :
 - `inventory_error_from_item_name_error_maps_to_invalid_name`
@@ -53,9 +53,9 @@ Tests :
 ## Phase 2 — Constructeurs validés et `panic!`
 Concepts : validation in constructor, error enums, panics
 
-- [ ] `Item::new(name: String, kind: ItemKind, rarity: Rarity, weight: u32) -> Result<Item, InventoryError>` qui rejette nom vide et poids zéro
-- [ ] `Backpack::new` retourne désormais `Result<Backpack, InventoryError>` (rejette `max_weight == 0`)
-- [ ] Nouveaux variants d'erreur : `InvalidName`, `InvalidWeight`, `InvalidMaxWeight`
+- [x] `Item::new(name: String, kind: ItemKind, rarity: Rarity, weight: u32) -> Result<Item, InventoryError>` qui rejette nom vide et poids zéro
+- [x] `Backpack::new` retourne désormais `Result<Backpack, InventoryError>` (rejette `max_weight == 0`)
+- [x] Nouveaux variants d'erreur : `InvalidName`, `InvalidWeight`, `InvalidMaxWeight`
 - [ ] Ajouter un point dans le code où `panic!` (ou `unreachable!`) est justifié — invariant interne qui ne peut pas être violé depuis l'extérieur
 
 Tests :
