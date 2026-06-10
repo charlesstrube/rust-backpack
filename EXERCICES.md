@@ -29,6 +29,27 @@ Tests :
 
 ---
 
+## Phase 1.5 — Manual `From<E1> for E2` (préparation Phase 2)
+Concepts : From trait, error propagation, `?` operator, error wrapping
+
+Cette mini-phase prépare le terrain pour que `Item::new` (Phase 2) puisse utiliser l'opérateur `?` au lieu d'un `panic!`. Elle introduit le pattern `?` + `From` qui revient partout en Rust.
+
+Contexte : tu as déjà un type d'erreur côté newtype (`ItemNameError::NameIsEmpty`) côté `ItemName::try_from`. Il faut pouvoir le **convertir** vers `InventoryError` pour que `?` fonctionne dans `Item::new`.
+
+- [ ] Ajouter le variant `InvalidName` à `InventoryError` (les autres variants `InvalidWeight`, `InvalidMaxWeight` viendront en Phase 2)
+- [ ] Implémenter `impl From<ItemNameError> for InventoryError` à la main — mappe `NameIsEmpty` → `InvalidName`
+- [ ] Vérifier mentalement que `let name: ItemName = some_string.try_into()?;` compile désormais dans un contexte où la fonction retourne `Result<_, InventoryError>`
+
+Tests :
+- `inventory_error_from_item_name_error_maps_to_invalid_name`
+- `question_mark_propagates_item_name_error_into_inventory_error` (petite fonction de démo qui retourne `Result<ItemName, InventoryError>` et utilise `?`)
+
+**À retenir** : ce `impl From` manuel sera remplacé en Phase 5 par un `#[from]` généré par `thiserror`. Le code appelant (`?`) ne changera pas — c'est tout l'intérêt du pattern.
+
+**À éviter** : `.map_err(|_| InventoryError::InvalidName)?`. Ça compile, mais ça **jette** la cause sous-jacente, ce qui rend `Error::source()` (Phase 5) inutile pour ce variant. Utilise `From` + `?` à la place.
+
+---
+
 ## Phase 2 — Constructeurs validés et `panic!`
 Concepts : validation in constructor, error enums, panics
 

@@ -1,5 +1,7 @@
 use crate::error::InventoryError;
-use crate::item::{Item, ItemKind, Rarity};
+use crate::item::Item;
+use crate::item::item_kind::ItemKind;
+use crate::rarity::Rarity;
 
 pub struct Backpack {
     items: Vec<Item>,
@@ -150,29 +152,19 @@ impl<'a> IntoIterator for &'a Backpack {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::item::ItemKind;
+    use crate::item::item_kind::ItemKind;
 
     fn sword() -> Item {
-        Item::new(
-            "Sword".to_string(),
-            ItemKind::Weapon { damage: 50 },
-            Rarity::Epic,
-            5,
-        )
+        Item::new("Sword", ItemKind::Weapon { damage: 50 }, Rarity::Epic, 5)
     }
 
     fn dagger() -> Item {
-        Item::new(
-            "Dagger".to_string(),
-            ItemKind::Weapon { damage: 15 },
-            Rarity::Common,
-            2,
-        )
+        Item::new("Dagger", ItemKind::Weapon { damage: 15 }, Rarity::Common, 2)
     }
 
     fn potion() -> Item {
         Item::new(
-            "Health Potion".to_string(),
+            "Health Potion",
             ItemKind::Potion { healing: 25 },
             Rarity::Common,
             1,
@@ -180,12 +172,7 @@ mod tests {
     }
 
     fn shield() -> Item {
-        Item::new(
-            "Shield".to_string(),
-            ItemKind::Armor { defense: 30 },
-            Rarity::Rare,
-            10,
-        )
+        Item::new("Shield", ItemKind::Armor { defense: 30 }, Rarity::Rare, 10)
     }
 
     #[test]

@@ -4,6 +4,7 @@ pub enum InventoryError {
     BackpackFull,
     ItemNotFound,
     WouldExceedCapacity,
+    InvalidName,
 }
 
 impl Debug for InventoryError {
@@ -12,6 +13,7 @@ impl Debug for InventoryError {
             Self::BackpackFull => write!(f, "BackoackFull"),
             Self::ItemNotFound => write!(f, "ItemNotFound"),
             Self::WouldExceedCapacity => write!(f, "WouldExceedCapacity"),
+            Self::InvalidName => write!(f, "InvalidName"),
         }
     }
 }
@@ -29,6 +31,31 @@ impl PartialEq for InventoryError {
 
 #[cfg(test)]
 mod tests {
+    // =====================================================================
+    // PHASE 1.5 — Manual From<ItemNameError> for InventoryError
+    // =====================================================================
+
+    // use super::*;
+    // use crate::item::item_name::{ItemName, ItemNameError};
+
+    // #[test]
+    // fn inventory_error_from_item_name_error_maps_to_invalid_name() {
+    //     let src = ItemNameError::NameIsEmpty;
+    //     let converted: InventoryError = src.into();
+    //     // adapt the expected variant name to your enum
+    //     assert!(matches!(converted, InventoryError::InvalidName));
+    // }
+
+    // #[test]
+    // fn question_mark_propagates_item_name_error_into_inventory_error() {
+    //     fn make_name(raw: &str) -> Result<ItemName, InventoryError> {
+    //         let name: ItemName = raw.try_into()?;
+    //         Ok(name)
+    //     }
+    //     assert!(make_name("ok").is_ok());
+    //     assert!(matches!(make_name(""), Err(InventoryError::InvalidName)));
+    // }
+
     // =====================================================================
     // PHASE 5 — thiserror, std::error::Error, source chaining
     // =====================================================================

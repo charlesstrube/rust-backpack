@@ -1,109 +1,24 @@
-use std::fmt::{Debug, Display, Formatter, Result};
+pub mod item_kind;
+pub mod item_name;
 
-pub enum Rarity {
-    Common,
-    Rare,
-    Epic,
-    Legendary,
-}
+use crate::rarity::Rarity;
+use item_kind::ItemKind;
+use item_name::ItemName;
+use std::fmt::{Debug, Formatter, Result};
 
-impl Debug for Rarity {
-    fn fmt(&self, f: &mut Formatter) -> Result {
-        match self {
-            Rarity::Common => write!(f, "Common"),
-            Rarity::Rare => write!(f, "Rare"),
-            Rarity::Epic => write!(f, "Epic"),
-            Rarity::Legendary => write!(f, "Legendary"),
-        }
-    }
-}
-
-impl PartialEq for Rarity {
-    fn eq(&self, other: &Self) -> bool {
-        matches!(
-            (self, other),
-            (Rarity::Common, Rarity::Common)
-                | (Rarity::Rare, Rarity::Rare)
-                | (Rarity::Epic, Rarity::Epic)
-                | (Rarity::Legendary, Rarity::Legendary)
-        )
-    }
-}
-
-impl Copy for Rarity {}
-
-impl Clone for Rarity {
-    fn clone(&self) -> Self {
-        *self
-    }
-}
-
-pub enum ItemKind {
-    Weapon { damage: u32 },
-    Potion { healing: u32 },
-    Armor { defense: u32 },
-}
-
-impl Debug for ItemKind {
-    fn fmt(&self, f: &mut Formatter) -> Result {
-        match self {
-            Self::Weapon { damage } => write!(f, "Weapon: {{ damage: {} }} ", damage),
-            Self::Potion { healing } => write!(f, "Potion {{ healing: {} }}", healing),
-            Self::Armor { defense } => write!(f, "Armor {{ defense: {} }}", defense),
-        }
-    }
-}
-
-impl Display for ItemKind {
-    fn fmt(&self, f: &mut Formatter) -> Result {
-        match self {
-            Self::Weapon { damage } => write!(f, "Weapon with damage {}", damage),
-            Self::Potion { healing } => write!(f, "Potion with healing {}", healing),
-            Self::Armor { defense } => write!(f, "Armor with defense {}", defense),
-        }
-    }
-}
-
-impl PartialEq for ItemKind {
-    fn eq(&self, other: &Self) -> bool {
-        match (self, other) {
-            (
-                Self::Armor {
-                    defense: self_defense,
-                },
-                Self::Armor {
-                    defense: other_defense,
-                },
-            ) => self_defense == other_defense,
-            (
-                Self::Potion {
-                    healing: self_healing,
-                },
-                Self::Potion {
-                    healing: other_healing,
-                },
-            ) => self_healing == other_healing,
-            (
-                Self::Weapon {
-                    damage: self_damage,
-                },
-                Self::Weapon {
-                    damage: other_damage,
-                },
-            ) => self_damage == other_damage,
-            _ => false,
-        }
-    }
-}
 pub struct Item {
-    name: String,
+    name: ItemName,
     kind: ItemKind,
     rarity: Rarity,
     weight: u32,
 }
 
 impl Item {
-    pub fn new(name: String, kind: ItemKind, rarity: Rarity, weight: u32) -> Self {
+    pub fn new(name: &str, kind: ItemKind, rarity: Rarity, weight: u32) -> Self {
+        let Ok(name) = ItemName::try_from(name) else {
+            panic!("panic");
+        };
+
         Self {
             name,
             kind,
@@ -113,7 +28,7 @@ impl Item {
     }
 
     pub fn name(&self) -> &str {
-        &self.name
+        self.name.value()
     }
 
     pub fn kind(&self) -> &ItemKind {
@@ -152,7 +67,7 @@ impl PartialEq for Item {
 impl Item {
     fn describe(&self) -> String {
         format!(
-            "{} is item with {} type and a weight of {}, and has a {:?} rarity",
+            "{:?} is item with {} type and a weight of {}, and has a {:?} rarity",
             self.name, self.kind, self.weight, self.rarity
         )
     }
@@ -163,21 +78,16 @@ mod tests {
     use super::*;
 
     fn sword() -> Item {
-        Item {
-            name: "Sword".to_string(),
-            kind: ItemKind::Weapon { damage: 50 },
-            rarity: Rarity::Epic,
-            weight: 5,
-        }
+        Item::new("Sword", ItemKind::Weapon { damage: 50 }, Rarity::Epic, 5)
     }
 
     fn potion() -> Item {
-        Item {
-            name: "Health Potion".to_string(),
-            kind: ItemKind::Potion { healing: 25 },
-            rarity: Rarity::Common,
-            weight: 1,
-        }
+        Item::new(
+            "Health Potion",
+            ItemKind::Potion { healing: 25 },
+            Rarity::Common,
+            1,
+        )
     }
 
     #[test]
