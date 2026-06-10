@@ -1,30 +1,42 @@
 pub mod item_kind;
 pub mod item_name;
+pub mod item_weight;
 
-use crate::rarity::Rarity;
+use crate::{error::InventoryError, rarity::Rarity};
 use item_kind::ItemKind;
 use item_name::ItemName;
-use std::fmt::{Debug, Formatter, Result};
+use item_weight::ItemWeight;
+use std::fmt::{Debug, Formatter};
 
 pub struct Item {
     name: ItemName,
     kind: ItemKind,
     rarity: Rarity,
-    weight: u32,
+    weight: ItemWeight,
 }
 
 impl Item {
-    pub fn new(name: &str, kind: ItemKind, rarity: Rarity, weight: u32) -> Self {
-        let Ok(name) = ItemName::try_from(name) else {
-            panic!("panic");
+    pub fn new(
+        name: &str,
+        kind: ItemKind,
+        rarity: Rarity,
+        weight: u32,
+    ) -> Result<Self, InventoryError> {
+        let name = match ItemName::try_from(name) {
+            Ok(name) => name,
+            Err(error) => return Err(InventoryError::from(error)),
+        };
+        let weight = match ItemWeight::try_from(weight) {
+            Ok(weight) => weight,
+            Err(error) => return Err(InventoryError::from(error)),
         };
 
-        Self {
+        Ok(Self {
             name,
             kind,
             rarity,
             weight,
-        }
+        })
     }
 
     pub fn name(&self) -> &str {
@@ -40,12 +52,12 @@ impl Item {
     }
 
     pub fn weight(&self) -> u32 {
-        self.weight
+        self.weight.value()
     }
 }
 
 impl Debug for Item {
-    fn fmt(&self, f: &mut Formatter) -> Result {
+    fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
         write!(
             f,
             "Item {{ name: {:?}, kind: {:?}, rarity: {:?}, weight: {:?} }}",
@@ -67,7 +79,7 @@ impl PartialEq for Item {
 impl Item {
     fn describe(&self) -> String {
         format!(
-            "{:?} is item with {} type and a weight of {}, and has a {:?} rarity",
+            "{:?} is item with {} type and a weight of {:?}, and has a {:?} rarity",
             self.name, self.kind, self.weight, self.rarity
         )
     }
@@ -78,7 +90,7 @@ mod tests {
     use super::*;
 
     fn sword() -> Item {
-        Item::new("Sword", ItemKind::Weapon { damage: 50 }, Rarity::Epic, 5)
+        Item::new("Sword", ItemKind::Weapon { damage: 50 }, Rarity::Epic, 5).unwrap()
     }
 
     fn potion() -> Item {
@@ -88,6 +100,7 @@ mod tests {
             Rarity::Common,
             1,
         )
+        .unwrap()
     }
 
     #[test]
@@ -129,38 +142,28 @@ mod tests {
     // PHASE 2 — Item::new validated constructor
     // =====================================================================
 
-    // #[test]
-    // fn item_new_returns_ok_for_valid_input() {
-    //     let item = Item::new(
-    //         "Sword".to_string(),
-    //         ItemKind::Weapon { damage: 50 },
-    //         Rarity::Epic,
-    //         5,
-    //     );
-    //     assert!(item.is_ok());
-    // }
+    #[test]
+    fn item_new_returns_ok_for_valid_input() {
+        let item = Item::new("Sword", ItemKind::Weapon { damage: 50 }, Rarity::Epic, 5);
+        assert!(item.is_ok());
+    }
 
-    // #[test]
-    // fn item_new_rejects_empty_name() {
-    //     let item = Item::new(
-    //         String::new(),
-    //         ItemKind::Weapon { damage: 50 },
-    //         Rarity::Epic,
-    //         5,
-    //     );
-    //     assert!(item.is_err());
-    // }
+    #[test]
+    fn item_new_rejects_empty_name() {
+        let item = Item::new(
+            String::new().as_str(),
+            ItemKind::Weapon { damage: 50 },
+            Rarity::Epic,
+            5,
+        );
+        assert!(item.is_err());
+    }
 
-    // #[test]
-    // fn item_new_rejects_zero_weight() {
-    //     let item = Item::new(
-    //         "Sword".to_string(),
-    //         ItemKind::Weapon { damage: 50 },
-    //         Rarity::Epic,
-    //         0,
-    //     );
-    //     assert!(item.is_err());
-    // }
+    #[test]
+    fn item_new_rejects_zero_weight() {
+        let item = Item::new("Sword", ItemKind::Weapon { damage: 50 }, Rarity::Epic, 0);
+        assert!(item.is_err());
+    }
 
     // =====================================================================
     // PHASE 6 — TryFrom / From conversions

@@ -29,7 +29,7 @@ Tests :
 
 ---
 
-## Phase 1.5 — Manual `From<E1> for E2` (préparation Phase 2)
+## Phase 1.5 — Manual `From<E1> for E2` (préparation \)
 Concepts : From trait, error propagation, `?` operator, error wrapping
 
 Cette mini-phase prépare le terrain pour que `Item::new` (Phase 2) puisse utiliser l'opérateur `?` au lieu d'un `panic!`. Elle introduit le pattern `?` + `From` qui revient partout en Rust.

@@ -9,11 +9,15 @@ pub struct Backpack {
 }
 
 impl Backpack {
-    pub fn new(max_weight: u32) -> Self {
-        Self {
+    pub fn new(max_weight: u32) -> Result<Self, InventoryError> {
+        if max_weight <= 0 {
+            return Err(InventoryError::BackpackEmpty);
+        }
+
+        Ok(Self {
             items: Vec::new(),
             max_weight,
-        }
+        })
     }
 
     pub fn add_item(&mut self, item: Item) -> Result<(), InventoryError> {
@@ -155,11 +159,11 @@ mod tests {
     use crate::item::item_kind::ItemKind;
 
     fn sword() -> Item {
-        Item::new("Sword", ItemKind::Weapon { damage: 50 }, Rarity::Epic, 5)
+        Item::new("Sword", ItemKind::Weapon { damage: 50 }, Rarity::Epic, 5).unwrap()
     }
 
     fn dagger() -> Item {
-        Item::new("Dagger", ItemKind::Weapon { damage: 15 }, Rarity::Common, 2)
+        Item::new("Dagger", ItemKind::Weapon { damage: 15 }, Rarity::Common, 2).unwrap()
     }
 
     fn potion() -> Item {
@@ -169,29 +173,30 @@ mod tests {
             Rarity::Common,
             1,
         )
+        .unwrap()
     }
 
     fn shield() -> Item {
-        Item::new("Shield", ItemKind::Armor { defense: 30 }, Rarity::Rare, 10)
+        Item::new("Shield", ItemKind::Armor { defense: 30 }, Rarity::Rare, 10).unwrap()
     }
 
     #[test]
     fn new_backpack_is_empty() {
-        let bag = Backpack::new(100);
+        let bag = Backpack::new(100).unwrap();
         assert_eq!(bag.items.len(), 0);
         assert_eq!(bag.max_weight, 100);
     }
 
     #[test]
     fn add_item_succeeds_under_capacity() {
-        let mut bag = Backpack::new(100);
+        let mut bag = Backpack::new(100).unwrap();
         assert_eq!(bag.add_item(sword()), Ok(()));
         assert_eq!(bag.items.len(), 1);
     }
 
     #[test]
     fn add_item_fails_when_over_capacity() {
-        let mut bag = Backpack::new(6);
+        let mut bag = Backpack::new(6).unwrap();
         assert_eq!(bag.add_item(sword()), Ok(()));
         assert_eq!(bag.add_item(shield()), Err(InventoryError::BackpackFull));
         assert_eq!(bag.items.len(), 1);
@@ -199,7 +204,7 @@ mod tests {
 
     #[test]
     fn remove_item_returns_the_item() {
-        let mut bag = Backpack::new(100);
+        let mut bag = Backpack::new(100).unwrap();
         bag.add_item(sword()).unwrap();
         bag.add_item(potion()).unwrap();
         let removed = bag.remove_item("Sword").unwrap();
@@ -209,14 +214,14 @@ mod tests {
 
     #[test]
     fn remove_unknown_item_returns_error() {
-        let mut bag = Backpack::new(100);
+        let mut bag = Backpack::new(100).unwrap();
         bag.add_item(potion()).unwrap();
         assert_eq!(bag.remove_item("Sword"), Err(InventoryError::ItemNotFound));
     }
 
     #[test]
     fn total_weight_sums_items() {
-        let mut bag = Backpack::new(100);
+        let mut bag = Backpack::new(100).unwrap();
         bag.add_item(sword()).unwrap();
         bag.add_item(potion()).unwrap();
         bag.add_item(shield()).unwrap();
@@ -225,7 +230,7 @@ mod tests {
 
     #[test]
     fn count_by_rarity_counts_correctly() {
-        let mut bag = Backpack::new(100);
+        let mut bag = Backpack::new(100).unwrap();
         bag.add_item(sword()).unwrap();
         bag.add_item(dagger()).unwrap();
         bag.add_item(potion()).unwrap();
@@ -238,7 +243,7 @@ mod tests {
 
     #[test]
     fn strongest_weapon_returns_highest_damage() {
-        let mut bag = Backpack::new(100);
+        let mut bag = Backpack::new(100).unwrap();
         bag.add_item(dagger()).unwrap();
         bag.add_item(sword()).unwrap();
         bag.add_item(potion()).unwrap();
@@ -248,7 +253,7 @@ mod tests {
 
     #[test]
     fn strongest_weapon_returns_none_without_weapons() {
-        let mut bag = Backpack::new(100);
+        let mut bag = Backpack::new(100).unwrap();
         bag.add_item(potion()).unwrap();
         bag.add_item(shield()).unwrap();
         assert!(bag.strongest_weapon().is_none());
@@ -256,7 +261,7 @@ mod tests {
 
     #[test]
     fn total_value_uses_rarity_multiplier() {
-        let mut bag = Backpack::new(100);
+        let mut bag = Backpack::new(100).unwrap();
         bag.add_item(sword()).unwrap();
         bag.add_item(potion()).unwrap();
         bag.add_item(shield()).unwrap();
@@ -265,7 +270,7 @@ mod tests {
 
     #[test]
     fn find_by_name_returns_item_if_present() {
-        let mut bag = Backpack::new(100);
+        let mut bag = Backpack::new(100).unwrap();
         bag.add_item(sword()).unwrap();
         bag.add_item(potion()).unwrap();
         let found = bag.find_by_name("Sword").unwrap();
@@ -274,14 +279,14 @@ mod tests {
 
     #[test]
     fn find_by_name_returns_none_if_absent() {
-        let mut bag = Backpack::new(100);
+        let mut bag = Backpack::new(100).unwrap();
         bag.add_item(potion()).unwrap();
         assert!(bag.find_by_name("Sword").is_none());
     }
 
     #[test]
     fn weapons_returns_only_weapons() {
-        let mut bag = Backpack::new(100);
+        let mut bag = Backpack::new(100).unwrap();
         bag.add_item(sword()).unwrap();
         bag.add_item(potion()).unwrap();
         bag.add_item(dagger()).unwrap();
@@ -294,7 +299,7 @@ mod tests {
 
     #[test]
     fn borrowed_backpack_is_iterable() {
-        let mut bag = Backpack::new(100);
+        let mut bag = Backpack::new(100).unwrap();
         bag.add_item(sword()).unwrap();
         bag.add_item(potion()).unwrap();
         let mut count = 0;
@@ -307,7 +312,7 @@ mod tests {
 
     #[test]
     fn owned_backpack_can_be_consumed_by_into_iter() {
-        let mut bag = Backpack::new(100);
+        let mut bag = Backpack::new(100).unwrap();
         bag.add_item(sword()).unwrap();
         bag.add_item(potion()).unwrap();
         let names: Vec<String> = bag
@@ -325,7 +330,7 @@ mod tests {
 
     #[test]
     fn backpack_items_getter_exposes_slice() {
-        let mut bag = Backpack::new(100);
+        let mut bag = Backpack::new(100).unwrap();
         bag.add_item(sword()).unwrap();
         bag.add_item(potion()).unwrap();
         let items: &[Item] = bag.items();
@@ -334,14 +339,14 @@ mod tests {
 
     #[test]
     fn backpack_set_max_weight_accepts_increase() {
-        let mut bag = Backpack::new(50);
+        let mut bag = Backpack::new(50).unwrap();
         assert!(bag.set_max_weight(100).is_ok());
         assert_eq!(bag.max_weight(), 100);
     }
 
     #[test]
     fn backpack_set_max_weight_rejects_below_current_load() {
-        let mut bag = Backpack::new(100);
+        let mut bag = Backpack::new(100).unwrap();
         bag.add_item(shield()).unwrap();
         bag.add_item(sword()).unwrap();
         assert!(bag.set_max_weight(10).is_err());
@@ -350,7 +355,7 @@ mod tests {
 
     #[test]
     fn reserve_increases_capacity_without_changing_len() {
-        let mut bag = Backpack::new(100);
+        let mut bag = Backpack::new(100).unwrap();
         bag.add_item(sword()).unwrap();
         let len_before = bag.items().len();
         bag.reserve(64);
@@ -361,10 +366,10 @@ mod tests {
     // PHASE 2 — Backpack::new validated
     // =====================================================================
 
-    // #[test]
-    // fn backpack_new_rejects_zero_max_weight() {
-    //     assert!(Backpack::new(0).is_err());
-    // }
+    #[test]
+    fn backpack_new_rejects_zero_max_weight() {
+        assert!(Backpack::new(0).is_err());
+    }
 
     // =====================================================================
     // PHASE 3 — Saturating / checked arithmetic, casting, factorial

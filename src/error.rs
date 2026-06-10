@@ -1,19 +1,43 @@
-use std::fmt::{Debug, Formatter, Result};
+use std::fmt::{Debug, Formatter};
+
+use crate::item::{item_name::ItemNameError, item_weight::ItemWeightError};
 
 pub enum InventoryError {
     BackpackFull,
+    BackpackEmpty,
     ItemNotFound,
     WouldExceedCapacity,
     InvalidName,
+    InvalidWeight,
+    InvalidMaxWeight,
 }
 
 impl Debug for InventoryError {
-    fn fmt(&self, f: &mut Formatter) -> Result {
+    fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
         match self {
             Self::BackpackFull => write!(f, "BackoackFull"),
             Self::ItemNotFound => write!(f, "ItemNotFound"),
             Self::WouldExceedCapacity => write!(f, "WouldExceedCapacity"),
             Self::InvalidName => write!(f, "InvalidName"),
+            Self::BackpackEmpty => write!(f, "BackpackEmpty"),
+            Self::InvalidWeight => write!(f, "InvalidWeight"),
+            Self::InvalidMaxWeight => write!(f, "InvalidMaxWeight"),
+        }
+    }
+}
+
+impl From<ItemNameError> for InventoryError {
+    fn from(value: ItemNameError) -> Self {
+        match value {
+            ItemNameError::NameIsEmpty => InventoryError::InvalidName,
+        }
+    }
+}
+
+impl From<ItemWeightError> for InventoryError {
+    fn from(value: ItemWeightError) -> Self {
+        match value {
+            ItemWeightError::WeightIsZero => InventoryError::InvalidWeight,
         }
     }
 }
@@ -35,26 +59,26 @@ mod tests {
     // PHASE 1.5 — Manual From<ItemNameError> for InventoryError
     // =====================================================================
 
-    // use super::*;
-    // use crate::item::item_name::{ItemName, ItemNameError};
+    use super::*;
+    use crate::item::item_name::{ItemName, ItemNameError};
 
-    // #[test]
-    // fn inventory_error_from_item_name_error_maps_to_invalid_name() {
-    //     let src = ItemNameError::NameIsEmpty;
-    //     let converted: InventoryError = src.into();
-    //     // adapt the expected variant name to your enum
-    //     assert!(matches!(converted, InventoryError::InvalidName));
-    // }
+    #[test]
+    fn inventory_error_from_item_name_error_maps_to_invalid_name() {
+        let src = ItemNameError::NameIsEmpty;
+        let converted: InventoryError = src.into();
+        // adapt the expected variant name to your enum
+        assert!(matches!(converted, InventoryError::InvalidName));
+    }
 
-    // #[test]
-    // fn question_mark_propagates_item_name_error_into_inventory_error() {
-    //     fn make_name(raw: &str) -> Result<ItemName, InventoryError> {
-    //         let name: ItemName = raw.try_into()?;
-    //         Ok(name)
-    //     }
-    //     assert!(make_name("ok").is_ok());
-    //     assert!(matches!(make_name(""), Err(InventoryError::InvalidName)));
-    // }
+    #[test]
+    fn question_mark_propagates_item_name_error_into_inventory_error() {
+        fn make_name(raw: &str) -> Result<ItemName, InventoryError> {
+            let name: ItemName = raw.try_into()?;
+            Ok(name)
+        }
+        assert!(make_name("ok").is_ok());
+        assert!(matches!(make_name(""), Err(InventoryError::InvalidName)));
+    }
 
     // =====================================================================
     // PHASE 5 — thiserror, std::error::Error, source chaining
