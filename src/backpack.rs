@@ -8,6 +8,20 @@ pub struct Backpack {
     max_weight: u32,
 }
 
+fn factorial(n: u32) -> u128 {
+    let mut acc = 1u128;
+
+    if n == 0 || n == 1 {
+        return 1u128;
+    }
+
+    for x in 2..=n {
+        acc *= x as u128;
+    }
+
+    acc
+}
+
 impl Backpack {
     pub fn new(max_weight: u32) -> Result<Self, InventoryError> {
         if max_weight == 0 {
@@ -87,6 +101,42 @@ impl Backpack {
         self.items.reserve(additional)
     }
 
+    pub fn total_weight_saturating(&self) -> u32 {
+        self.max_weight.saturating_add(u32::MAX)
+    }
+
+    pub fn total_weight_checked(&self) -> Option<u32> {
+        let mut weight = 0u32;
+        let mut result = Some(0u32);
+        for item in self.items().iter() {
+            if result.is_some() && weight.checked_add(item.weight()).is_some() {
+                weight += item.weight();
+                result = Some(weight)
+            } else {
+                result = None;
+            }
+        }
+
+        result
+    }
+
+    pub fn average_weight(&self) -> f64 {
+        if self.items().iter().count() == 0 {
+            return 0f64;
+        }
+        let calc = self.total_weight() / (self.items().iter().count() as u32);
+
+        calc.into()
+    }
+
+    pub fn slot_combinations(&self, slots: u32) -> u128 {
+        let n = self.items().len() as u32;
+        if slots > n {
+            return 0;
+        }
+        factorial(n) / (factorial(slots) * factorial(n - slots))
+    }
+
     pub fn strongest_weapon(&self) -> Option<&Item> {
         let mut strongest_weapon: Option<&Item> = None;
         for item in self.items.iter() {
@@ -160,6 +210,10 @@ impl<'a> IntoIterator for &'a Backpack {
 mod tests {
     use super::*;
     use crate::item::item_kind::ItemKind;
+    #[cfg(test)]
+    fn push_unchecked(bag: &mut Backpack, item: Item) {
+        bag.items.push(item);
+    }
 
     fn sword() -> Item {
         Item::new("Sword", ItemKind::Weapon { damage: 50 }, Rarity::Epic, 5).unwrap()
@@ -378,83 +432,85 @@ mod tests {
     // PHASE 3 — Saturating / checked arithmetic, casting, factorial
     // =====================================================================
 
-    // #[test]
-    // fn total_weight_saturating_caps_at_u32_max() {
-    //     let mut bag = Backpack::new(u32::MAX).unwrap();
-    //     // build two giant items so the naive sum would overflow u32
-    //     let heavy_a = Item::new(
-    //         "A".into(),
-    //         ItemKind::Armor { defense: 1 },
-    //         Rarity::Common,
-    //         u32::MAX,
-    //     )
-    //     .unwrap();
-    //     let heavy_b = Item::new(
-    //         "B".into(),
-    //         ItemKind::Armor { defense: 1 },
-    //         Rarity::Common,
-    //         10,
-    //     )
-    //     .unwrap();
-    //     // bypass capacity check by pushing directly through bulk_add if needed,
-    //     // or temporarily raise max — adapt to your design
-    //     bag.bulk_add(&[heavy_a, heavy_b]).ok();
-    //     assert_eq!(bag.total_weight_saturating(), u32::MAX);
-    // }
+    #[test]
+    fn total_weight_saturating_caps_at_u32_max() {
+        let mut bag = Backpack::new(u32::MAX).unwrap();
+        // build two giant items so the naive sum would overflow u32
+        let heavy_a = Item::new(
+            "A".into(),
+            ItemKind::Armor { defense: 1 },
+            Rarity::Common,
+            u32::MAX,
+        )
+        .unwrap();
+        let heavy_b = Item::new(
+            "B".into(),
+            ItemKind::Armor { defense: 1 },
+            Rarity::Common,
+            10,
+        )
+        .unwrap();
+        // bypass capacity check by pushing directly through bulk_add if needed,
+        // or temporarily raise max — adapt to your design
+        push_unchecked(&mut bag, heavy_a);
+        push_unchecked(&mut bag, heavy_b);
+        assert_eq!(bag.total_weight_saturating(), u32::MAX);
+    }
 
-    // #[test]
-    // fn total_weight_checked_returns_none_on_overflow() {
-    //     let mut bag = Backpack::new(u32::MAX).unwrap();
-    //     let heavy_a = Item::new(
-    //         "A".into(),
-    //         ItemKind::Armor { defense: 1 },
-    //         Rarity::Common,
-    //         u32::MAX,
-    //     )
-    //     .unwrap();
-    //     let heavy_b = Item::new(
-    //         "B".into(),
-    //         ItemKind::Armor { defense: 1 },
-    //         Rarity::Common,
-    //         10,
-    //     )
-    //     .unwrap();
-    //     bag.bulk_add(&[heavy_a, heavy_b]).ok();
-    //     assert_eq!(bag.total_weight_checked(), None);
-    // }
+    #[test]
+    fn total_weight_checked_returns_none_on_overflow() {
+        let mut bag = Backpack::new(u32::MAX).unwrap();
+        let heavy_a = Item::new(
+            "A".into(),
+            ItemKind::Armor { defense: 1 },
+            Rarity::Common,
+            u32::MAX,
+        )
+        .unwrap();
+        let heavy_b = Item::new(
+            "B".into(),
+            ItemKind::Armor { defense: 1 },
+            Rarity::Common,
+            10,
+        )
+        .unwrap();
+        push_unchecked(&mut bag, heavy_a);
+        push_unchecked(&mut bag, heavy_b);
+        assert_eq!(bag.total_weight_checked(), None);
+    }
 
-    // #[test]
-    // fn average_weight_returns_zero_for_empty_backpack() {
-    //     let bag = Backpack::new(100).unwrap();
-    //     assert_eq!(bag.average_weight(), 0.0);
-    // }
+    #[test]
+    fn average_weight_returns_zero_for_empty_backpack() {
+        let bag = Backpack::new(100).unwrap();
+        assert_eq!(bag.average_weight(), 0.0);
+    }
 
-    // #[test]
-    // fn average_weight_computes_mean() {
-    //     let mut bag = Backpack::new(100).unwrap();
-    //     bag.add_item(sword()).unwrap();   // 5
-    //     bag.add_item(potion()).unwrap();  // 1
-    //     // (5 + 1) / 2 = 3.0
-    //     assert_eq!(bag.average_weight(), 3.0);
-    // }
+    #[test]
+    fn average_weight_computes_mean() {
+        let mut bag = Backpack::new(100).unwrap();
+        bag.add_item(sword()).unwrap(); // 5
+        bag.add_item(potion()).unwrap(); // 1
+        // (5 + 1) / 2 = 3.0
+        assert_eq!(bag.average_weight(), 3.0);
+    }
 
-    // #[test]
-    // fn factorial_of_five_is_one_hundred_twenty() {
-    //     assert_eq!(factorial(0), 1);
-    //     assert_eq!(factorial(1), 1);
-    //     assert_eq!(factorial(5), 120);
-    //     assert_eq!(factorial(10), 3_628_800);
-    // }
+    #[test]
+    fn factorial_of_five_is_one_hundred_twenty() {
+        assert_eq!(factorial(0), 1);
+        assert_eq!(factorial(1), 1);
+        assert_eq!(factorial(5), 120);
+        assert_eq!(factorial(10), 3_628_800);
+    }
 
-    // #[test]
-    // fn slot_combinations_uses_factorial() {
-    //     let mut bag = Backpack::new(100).unwrap();
-    //     bag.add_item(sword()).unwrap();
-    //     bag.add_item(potion()).unwrap();
-    //     bag.add_item(shield()).unwrap();
-    //     // C(3, 2) = 3! / (2! * 1!) = 3
-    //     assert_eq!(bag.slot_combinations(2), 3);
-    // }
+    #[test]
+    fn slot_combinations_uses_factorial() {
+        let mut bag = Backpack::new(100).unwrap();
+        bag.add_item(sword()).unwrap();
+        bag.add_item(potion()).unwrap();
+        bag.add_item(shield()).unwrap();
+        // C(3, 2) = 3! / (2! * 1!) = 3
+        assert_eq!(bag.slot_combinations(2), 3);
+    }
 
     // =====================================================================
     // PHASE 4 — Derive macros smoke test

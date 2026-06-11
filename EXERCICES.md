@@ -68,6 +68,20 @@ Tests :
 
 ---
 
+## Phase 2.1 — Test back-door (`#[cfg(test)]`)
+Concepts : conditional compilation, test-only API, invariants vs testabilité
+
+Contexte : `add_item` garantit `total_weight ≤ max_weight`, et `max_weight: u32`. Donc par construction, la somme des poids ne peut jamais déborder un `u32` via l'API publique. Les méthodes de la Phase 3 (`total_weight_saturating`, `total_weight_checked`) deviennent intestables sans une porte dérobée.
+
+- [ ] Ajouter un helper sur `Backpack` qui pousse un `Item` sans vérifier la capacité, gated derrière `#[cfg(test)]`
+- [ ] L'invariant normal d'`add_item` reste intact en prod (le helper n'existe pas hors tests)
+
+Pas de test dédié — ce helper est l'**outil** qui rend les tests de Phase 3 (`*_caps_at_u32_max`, `*_returns_none_on_overflow`) exécutables.
+
+**À retenir** : `#[cfg(test)]` permet d'exposer une surface de test sans polluer l'API publique. C'est légitime quand on veut tester une propriété qui contredit une invariante normale. À distinguer d'un constructeur "unsafe" public, qui lui exposerait le contournement à tout appelant.
+
+---
+
 ## Phase 3 — Arithmétique sécurisée, casting, factorielle
 Concepts : overflow/underflow, saturating arithmetic, as casting, factorial, while/for
 
