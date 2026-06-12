@@ -4,6 +4,12 @@ use crate::item::item_kind::ItemKind;
 use crate::rarity::Rarity;
 
 pub struct Backpack {
+    /*
+     * we cannot impl display for this type because rust's orphan rule
+     * 1: Display is foreign (std)
+     * 2: Item is local. But that doesn't help, the orphan rule looks at the outer type (vec), not the type parameter
+     * we would need to create a dedicated type for that Vec<Item>
+     */
     items: Vec<Item>,
     max_weight: u32,
 }

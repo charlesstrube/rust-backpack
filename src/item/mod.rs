@@ -6,8 +6,9 @@ use crate::{error::InventoryError, rarity::Rarity};
 use item_kind::ItemKind;
 use item_name::ItemName;
 use item_weight::ItemWeight;
-use std::fmt::{Debug, Formatter};
+use std::fmt::Debug;
 
+#[derive(Debug, PartialEq, Clone)]
 pub struct Item {
     name: ItemName,
     kind: ItemKind,
@@ -50,24 +51,24 @@ impl Item {
     }
 }
 
-impl Debug for Item {
-    fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
-        write!(
-            f,
-            "Item {{ name: {:?}, kind: {:?}, rarity: {:?}, weight: {:?} }}",
-            self.name, self.kind, self.rarity, self.weight,
-        )
-    }
-}
+// impl Debug for Item {
+//     fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
+//         write!(
+//             f,
+//             "Item {{ name: {:?}, kind: {:?}, rarity: {:?}, weight: {:?} }}",
+//             self.name, self.kind, self.rarity, self.weight,
+//         )
+//     }
+// }
 
-impl PartialEq for Item {
-    fn eq(&self, other: &Self) -> bool {
-        self.name == other.name
-            && self.kind == other.kind
-            && self.rarity == other.rarity
-            && self.weight == other.weight
-    }
-}
+// impl PartialEq for Item {
+//     fn eq(&self, other: &Self) -> bool {
+//         self.name == other.name
+//             && self.kind == other.kind
+//             && self.rarity == other.rarity
+//             && self.weight == other.weight
+//     }
+// }
 
 #[allow(unused)]
 impl Item {

@@ -1,7 +1,8 @@
-use std::fmt::{Debug, Formatter};
+use std::fmt::Debug;
 
 use crate::item::{item_name::ItemNameError, item_weight::ItemWeightError};
 
+#[derive(Debug, PartialEq)]
 pub enum InventoryError {
     BackpackFull,
     InvalidMaxWeight,
@@ -11,18 +12,18 @@ pub enum InventoryError {
     InvalidWeight,
 }
 
-impl Debug for InventoryError {
-    fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
-        match self {
-            Self::BackpackFull => write!(f, "BackoackFull"),
-            Self::ItemNotFound => write!(f, "ItemNotFound"),
-            Self::WouldExceedCapacity => write!(f, "WouldExceedCapacity"),
-            Self::InvalidName => write!(f, "InvalidName"),
-            Self::InvalidMaxWeight => write!(f, "InvalidMaxWeight"),
-            Self::InvalidWeight => write!(f, "InvalidWeight"),
-        }
-    }
-}
+// impl Debug for InventoryError {
+//     fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
+//         match self {
+//             Self::BackpackFull => write!(f, "BackoackFull"),
+//             Self::ItemNotFound => write!(f, "ItemNotFound"),
+//             Self::WouldExceedCapacity => write!(f, "WouldExceedCapacity"),
+//             Self::InvalidName => write!(f, "InvalidName"),
+//             Self::InvalidMaxWeight => write!(f, "InvalidMaxWeight"),
+//             Self::InvalidWeight => write!(f, "InvalidWeight"),
+//         }
+//     }
+// }
 
 impl From<ItemNameError> for InventoryError {
     fn from(value: ItemNameError) -> Self {
@@ -40,19 +41,19 @@ impl From<ItemWeightError> for InventoryError {
     }
 }
 
-impl PartialEq for InventoryError {
-    fn eq(&self, other: &Self) -> bool {
-        matches!(
-            (self, other),
-            (Self::BackpackFull, Self::BackpackFull)
-                | (Self::InvalidMaxWeight, Self::InvalidMaxWeight)
-                | (Self::ItemNotFound, Self::ItemNotFound)
-                | (Self::WouldExceedCapacity, Self::WouldExceedCapacity)
-                | (Self::InvalidName, Self::InvalidName)
-                | (Self::InvalidWeight, Self::InvalidWeight)
-        )
-    }
-}
+// impl PartialEq for InventoryError {
+//     fn eq(&self, other: &Self) -> bool {
+//         matches!(
+//             (self, other),
+//             (Self::BackpackFull, Self::BackpackFull)
+//                 | (Self::InvalidMaxWeight, Self::InvalidMaxWeight)
+//                 | (Self::ItemNotFound, Self::ItemNotFound)
+//                 | (Self::WouldExceedCapacity, Self::WouldExceedCapacity)
+//                 | (Self::InvalidName, Self::InvalidName)
+//                 | (Self::InvalidWeight, Self::InvalidWeight)
+//         )
+//     }
+// }
 
 #[cfg(test)]
 mod tests {

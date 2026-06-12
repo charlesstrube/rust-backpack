@@ -3,7 +3,7 @@ pub enum ItemWeightError {
     WeightIsZero,
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct ItemWeight(u32);
 
 impl ItemWeight {
