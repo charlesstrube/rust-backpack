@@ -1,10 +1,7 @@
+use std::ops::Deref;
+
 #[derive(Debug, Clone, PartialEq)]
 pub struct ItemName(String);
-
-#[derive(Debug)]
-pub enum ItemNameError {
-    NameIsEmpty,
-}
 
 impl ItemName {
     pub fn value(&self) -> &str {
@@ -12,19 +9,27 @@ impl ItemName {
     }
 }
 
-impl TryFrom<&str> for ItemName {
-    type Error = ItemNameError;
-    fn try_from(value: &str) -> Result<Self, Self::Error> {
-        Self::try_from(value.to_string())
+impl From<&str> for ItemName {
+    fn from(value: &str) -> Self {
+        Self(value.into())
     }
 }
 
-impl TryFrom<String> for ItemName {
-    type Error = ItemNameError;
-    fn try_from(value: String) -> Result<Self, Self::Error> {
-        if value.is_empty() {
-            return Err(ItemNameError::NameIsEmpty);
-        }
-        Ok(Self(value))
+impl From<String> for ItemName {
+    fn from(value: String) -> Self {
+        Self(value)
+    }
+}
+
+impl Deref for ItemName {
+    type Target = str;
+    fn deref(&self) -> &Self::Target {
+        self.0.as_str()
+    }
+}
+
+impl AsRef<str> for ItemName {
+    fn as_ref(&self) -> &str {
+        &self.0.as_str()
     }
 }

@@ -23,7 +23,11 @@ impl Item {
         rarity: Rarity,
         weight: u32,
     ) -> Result<Self, InventoryError> {
-        let name = ItemName::try_from(name)?;
+        if name.chars().count() == 0 {
+            return Err(InventoryError::InvalidName("Cannot be empty".into()));
+        }
+
+        let name = ItemName::from(name);
         let weight = ItemWeight::try_from(weight)?;
 
         Ok(Self {
@@ -82,6 +86,8 @@ impl Item {
 
 #[cfg(test)]
 mod tests {
+    use crate::utils::length_of;
+
     use super::*;
 
     fn sword() -> Item {
@@ -202,36 +208,36 @@ mod tests {
     // PHASE 7 — Newtype ItemName + Deref + ?Sized
     // =====================================================================
 
-    // #[test]
-    // fn item_name_from_str_wraps_owned_string() {
-    //     let name: ItemName = "Sword".into();
-    //     let _borrowed: &str = &name;
-    // }
+    #[test]
+    fn item_name_from_str_wraps_owned_string() {
+        let name: ItemName = "Sword".into();
+        let _borrowed: &str = &name;
+    }
 
-    // #[test]
-    // fn item_name_from_string_wraps_owned_string() {
-    //     let owned: String = "Sword".to_string();
-    //     let name: ItemName = owned.into();
-    //     assert_eq!(&*name, "Sword");
-    // }
+    #[test]
+    fn item_name_from_string_wraps_owned_string() {
+        let owned: String = "Sword".to_string();
+        let name: ItemName = owned.into();
+        assert_eq!(&*name, "Sword");
+    }
 
-    // #[test]
-    // fn item_name_derefs_to_str_methods() {
-    //     let name: ItemName = "Sword".into();
-    //     assert_eq!(name.len(), 5);
-    //     assert!(name.starts_with("Sw"));
-    //     assert!(name.contains("wor"));
-    // }
+    #[test]
+    fn item_name_derefs_to_str_methods() {
+        let name: ItemName = "Sword".into();
+        assert_eq!(name.len(), 5);
+        assert!(name.starts_with("Sw"));
+        assert!(name.contains("wor"));
+    }
 
-    // #[test]
-    // fn length_of_accepts_str_string_and_item_name() {
-    //     let raw: &str = "abc";
-    //     let owned: String = String::from("abcd");
-    //     let name: ItemName = "abcde".into();
-    //     assert_eq!(length_of(raw), 3);
-    //     assert_eq!(length_of(&owned), 4);
-    //     assert_eq!(length_of(&name), 5);
-    // }
+    #[test]
+    fn length_of_accepts_str_string_and_item_name() {
+        let raw: &str = "abc";
+        let owned: String = String::from("abcd");
+        let name: ItemName = "abcde".into();
+        assert_eq!(length_of(raw), 3);
+        assert_eq!(length_of(&owned), 4);
+        assert_eq!(length_of(&name), 5);
+    }
 
     // =====================================================================
     // PHASE 11 — Rarity ordering (PartialOrd / Ord)

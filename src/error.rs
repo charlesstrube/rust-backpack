@@ -1,7 +1,7 @@
 use std::fmt::Debug;
 
 use crate::{
-    item::{item_kind::ParseItemKindError, item_name::ItemNameError, item_weight::ItemWeightError},
+    item::{item_kind::ParseItemKindError, item_weight::ItemWeightError},
     rarity::ParseRarityError,
 };
 
@@ -25,13 +25,6 @@ pub enum InventoryError {
     ParseKind(#[from] ParseItemKindError),
 }
 
-impl From<ItemNameError> for InventoryError {
-    fn from(value: ItemNameError) -> Self {
-        match value {
-            ItemNameError::NameIsEmpty => InventoryError::InvalidName("Cannot be empty".into()),
-        }
-    }
-}
 impl From<ItemWeightError> for InventoryError {
     fn from(value: ItemWeightError) -> Self {
         match value {
@@ -58,39 +51,14 @@ impl From<ItemWeightError> for InventoryError {
 
 #[cfg(test)]
 mod tests {
-    // =====================================================================
-    // PHASE 1.5 — Manual From<ItemNameError> for InventoryError
-    // =====================================================================
-
-    use super::*;
-    use crate::{
-        item::item_name::{ItemName, ItemNameError},
-        rarity::Rarity,
-    };
-
-    #[test]
-    fn inventory_error_from_item_name_error_maps_to_invalid_name() {
-        let src = ItemNameError::NameIsEmpty;
-        let converted: InventoryError = src.into();
-        // adapt the expected variant name to your enum
-        assert!(matches!(converted, InventoryError::InvalidName(_)));
-    }
-
-    #[test]
-    fn question_mark_propagates_item_name_error_into_inventory_error() {
-        fn make_name(raw: &str) -> Result<ItemName, InventoryError> {
-            let name: ItemName = raw.try_into()?;
-            Ok(name)
-        }
-        assert!(make_name("ok").is_ok());
-        assert!(matches!(make_name(""), Err(InventoryError::InvalidName(_))));
-    }
 
     // =====================================================================
     // PHASE 5 — thiserror, std::error::Error, source chaining
     // =====================================================================
 
     use std::error::Error;
+
+    use crate::{error::InventoryError, rarity::Rarity};
 
     #[test]
     fn inventory_error_implements_std_error() {

@@ -150,10 +150,10 @@ Tests :
 ## Phase 7 — Newtype, `Deref`, `Sized`
 Concepts : Deref trait, Sized trait (`?Sized`), string slices, orphan rule
 
-- [ ] Newtype `pub struct ItemName(String)`
-- [ ] `impl From<&str> for ItemName` et `impl From<String> for ItemName`
-- [ ] `impl Deref for ItemName` avec `Target = str` (coercion auto vers `&str`)
-- [ ] Remplacer le champ `name: String` de `Item` par `name: ItemName`
+- [x] Newtype `pub struct ItemName(String)`
+- [x] `impl From<&str> for ItemName` et `impl From<String> for ItemName`
+- [x] `impl Deref for ItemName` avec `Target = str` (coercion auto vers `&str`)
+- [x] Remplacer le champ `name: String` de `Item` par `name: ItemName`
 - [ ] Helper libre `pub fn length_of<T: ?Sized + AsRef<str>>(x: &T) -> usize`
 
 Tests :
