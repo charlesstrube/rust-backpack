@@ -1,3 +1,5 @@
+use std::sync::atomic::AtomicU32;
+
 use crate::error::InventoryError;
 use crate::item::Item;
 use crate::item::item_kind::ItemKind;
@@ -204,8 +206,9 @@ impl IntoIterator for Backpack {
     type Item = Item;
     type IntoIter = std::vec::IntoIter<Item>;
 
-    fn into_iter(self) -> Self::IntoIter {
-        self.items.into_iter()
+    fn into_iter(mut self) -> Self::IntoIter {
+        let items = std::mem::take(&mut self.items);
+        items.into_iter()
     }
 }
 
@@ -216,6 +219,18 @@ impl<'a> IntoIterator for &'a Backpack {
     fn into_iter(self) -> Self::IntoIter {
         self.items.iter()
     }
+}
+
+static DROPPED: AtomicU32 = AtomicU32::new(0);
+
+impl Drop for Backpack {
+    fn drop(&mut self) {
+        DROPPED.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+    }
+}
+
+pub fn dropped_count() -> u32 {
+    DROPPED.load(std::sync::atomic::Ordering::Relaxed)
 }
 
 #[cfg(test)]
@@ -528,30 +543,30 @@ mod tests {
     // PHASE 4 — Derive macros smoke test
     // =====================================================================
 
-    // #[test]
-    // fn rarity_works_as_hashmap_key() {
-    //     use std::collections::HashMap;
-    //     let mut counts: HashMap<Rarity, u32> = HashMap::new();
-    //     *counts.entry(Rarity::Common).or_insert(0) += 1;
-    //     *counts.entry(Rarity::Common).or_insert(0) += 1;
-    //     *counts.entry(Rarity::Epic).or_insert(0) += 1;
-    //     assert_eq!(counts.get(&Rarity::Common), Some(&2));
-    //     assert_eq!(counts.get(&Rarity::Epic), Some(&1));
-    //     assert_eq!(counts.get(&Rarity::Legendary), None);
-    // }
+    #[test]
+    fn rarity_works_as_hashmap_key() {
+        use std::collections::HashMap;
+        let mut counts: HashMap<Rarity, u32> = HashMap::new();
+        *counts.entry(Rarity::Common).or_insert(0) += 1;
+        *counts.entry(Rarity::Common).or_insert(0) += 1;
+        *counts.entry(Rarity::Epic).or_insert(0) += 1;
+        assert_eq!(counts.get(&Rarity::Common), Some(&2));
+        assert_eq!(counts.get(&Rarity::Epic), Some(&1));
+        assert_eq!(counts.get(&Rarity::Legendary), None);
+    }
 
     // =====================================================================
     // PHASE 8 — Drop counter
     // =====================================================================
 
-    // #[test]
-    // fn dropping_backpack_increments_drop_counter() {
-    //     let before = dropped_count();
-    //     {
-    //         let _bag = Backpack::new(50).unwrap();
-    //     }
-    //     assert_eq!(dropped_count(), before + 1);
-    // }
+    #[test]
+    fn dropping_backpack_increments_drop_counter() {
+        let before = dropped_count();
+        {
+            let _bag = Backpack::new(50).unwrap();
+        }
+        assert_eq!(dropped_count(), before + 1);
+    }
 
     // =====================================================================
     // PHASE 9 — Slices, lifetimes, impl Trait
