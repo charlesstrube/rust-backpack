@@ -120,8 +120,8 @@ Concepts : packages, dependencies, thiserror, Error trait, error source
 
 - [x] `cargo add thiserror`
 - [x] Réécrire `InventoryError` avec `#[derive(thiserror::Error, Debug)]` et un `#[error("...")]` par variante
-- [ ] Ajouter un variant `Parse(#[from] ParseRarityError)` (le type sera créé en Phase 6) pour que `?` convertisse automatiquement
-- [ ] `InventoryError::source()` doit renvoyer la cause interne pour le variant `Parse`
+- [x] Ajouter un variant `Parse(#[from] ParseRarityError)` (le type sera créé en Phase 6) pour que `?` convertisse automatiquement
+- [x] `InventoryError::source()` doit renvoyer la cause interne pour le variant `Parse`
 
 Tests :
 - `inventory_error_implements_std_error`
@@ -133,10 +133,10 @@ Tests :
 ## Phase 6 — `From` et `TryFrom`
 Concepts : From trait, TryFrom trait
 
-- [ ] `impl TryFrom<&str> for Rarity` avec son type d'erreur dédié `ParseRarityError`
-- [ ] `impl TryFrom<&str> for ItemKind` qui accepte `"weapon:50"`, `"potion:25"`, `"armor:30"`
-- [ ] Nouvelle struct publique `ItemSummary { name: String, value: u32 }`
-- [ ] `impl From<&Item> for ItemSummary` (la `value` dépend de la variante de `ItemKind`)
+- [x] `impl TryFrom<&str> for Rarity` avec son type d'erreur dédié `ParseRarityError`
+- [x] `impl TryFrom<&str> for ItemKind` qui accepte `"weapon:50"`, `"potion:25"`, `"armor:30"`
+- [x] Nouvelle struct publique `ItemSummary { name: String, value: u32 }`
+- [x] `impl From<&Item> for ItemSummary` (la `value` dépend de la variante de `ItemKind`)
 
 Tests :
 - `rarity_try_from_parses_known_variants`

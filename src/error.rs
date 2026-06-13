@@ -1,7 +1,7 @@
 use std::fmt::Debug;
 
 use crate::{
-    item::{item_name::ItemNameError, item_weight::ItemWeightError},
+    item::{item_kind::ParseItemKindError, item_name::ItemNameError, item_weight::ItemWeightError},
     rarity::ParseRarityError,
 };
 
@@ -11,7 +11,7 @@ pub enum InventoryError {
     BackpackFull,
     #[error("Invalid max weight: {0}")]
     InvalidMaxWeight(String),
-    #[error("Item isn't part of the backpack")]
+    #[error("Item not found in the backpack")]
     ItemNotFound,
     #[error("Item cannot fit in the backpack: {0}")]
     WouldExceedCapacity(String),
@@ -19,8 +19,10 @@ pub enum InventoryError {
     InvalidName(String),
     #[error("Invalid item weight: {0}")]
     InvalidWeight(String),
-    #[error(transparent)]
-    Parse(#[from] ParseRarityError),
+    #[error("Rarity parsing error")]
+    ParseRarity(#[from] ParseRarityError),
+    #[error("Item kind parsing error")]
+    ParseKind(#[from] ParseItemKindError),
 }
 
 impl From<ItemNameError> for InventoryError {

@@ -3,6 +3,7 @@
 mod backpack;
 mod error;
 mod item;
+mod item_summary;
 mod rarity;
 
 fn main() {

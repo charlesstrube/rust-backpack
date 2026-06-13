@@ -159,53 +159,44 @@ mod tests {
     // PHASE 6 — TryFrom / From conversions
     // =====================================================================
 
-    // #[test]
-    // fn rarity_try_from_parses_known_variants() {
-    //     assert_eq!(Rarity::try_from("common").unwrap(), Rarity::Common);
-    //     assert_eq!(Rarity::try_from("rare").unwrap(), Rarity::Rare);
-    //     assert_eq!(Rarity::try_from("epic").unwrap(), Rarity::Epic);
-    //     assert_eq!(Rarity::try_from("legendary").unwrap(), Rarity::Legendary);
-    // }
+    #[test]
+    fn rarity_try_from_parses_known_variants() {
+        assert_eq!(Rarity::try_from("common").unwrap(), Rarity::Common);
+        assert_eq!(Rarity::try_from("rare").unwrap(), Rarity::Rare);
+        assert_eq!(Rarity::try_from("epic").unwrap(), Rarity::Epic);
+        assert_eq!(Rarity::try_from("legendary").unwrap(), Rarity::Legendary);
+    }
 
-    // #[test]
-    // fn rarity_try_from_rejects_unknown_value() {
-    //     assert!(Rarity::try_from("mythic").is_err());
-    //     assert!(Rarity::try_from("").is_err());
-    // }
+    #[test]
+    fn rarity_try_from_rejects_unknown_value() {
+        assert!(Rarity::try_from("mythic").is_err());
+        assert!(Rarity::try_from("").is_err());
+    }
 
-    // #[test]
-    // fn item_kind_try_from_parses_weapon() {
-    //     let kind = ItemKind::try_from("weapon:50").unwrap();
-    //     assert_eq!(kind, ItemKind::Weapon { damage: 50 });
-    // }
+    #[test]
+    fn item_kind_try_from_parses_weapon() {
+        let kind = ItemKind::try_from("weapon:50").unwrap();
+        assert_eq!(kind, ItemKind::Weapon { damage: 50 });
+    }
 
-    // #[test]
-    // fn item_kind_try_from_parses_potion_and_armor() {
-    //     assert_eq!(
-    //         ItemKind::try_from("potion:25").unwrap(),
-    //         ItemKind::Potion { healing: 25 }
-    //     );
-    //     assert_eq!(
-    //         ItemKind::try_from("armor:30").unwrap(),
-    //         ItemKind::Armor { defense: 30 }
-    //     );
-    // }
+    #[test]
+    fn item_kind_try_from_parses_potion_and_armor() {
+        assert_eq!(
+            ItemKind::try_from("potion:25").unwrap(),
+            ItemKind::Potion { healing: 25 }
+        );
+        assert_eq!(
+            ItemKind::try_from("armor:30").unwrap(),
+            ItemKind::Armor { defense: 30 }
+        );
+    }
 
-    // #[test]
-    // fn item_kind_try_from_rejects_garbage() {
-    //     assert!(ItemKind::try_from("nope").is_err());
-    //     assert!(ItemKind::try_from("weapon:abc").is_err());
-    //     assert!(ItemKind::try_from("weapon").is_err());
-    // }
-
-    // #[test]
-    // fn item_summary_from_item_copies_name_and_value() {
-    //     let s = sword();
-    //     let summary: ItemSummary = (&s).into();
-    //     assert_eq!(summary.name, "Sword");
-    //     // adapt this assertion to your chosen value formula
-    //     assert!(summary.value > 0);
-    // }
+    #[test]
+    fn item_kind_try_from_rejects_garbage() {
+        assert!(ItemKind::try_from("nope").is_err());
+        assert!(ItemKind::try_from("weapon:abc").is_err());
+        assert!(ItemKind::try_from("weapon").is_err());
+    }
 
     // =====================================================================
     // PHASE 7 — Newtype ItemName + Deref + ?Sized
