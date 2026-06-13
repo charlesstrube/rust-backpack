@@ -1,5 +1,11 @@
 use std::fmt::Debug;
 
+#[derive(Debug, thiserror::Error, PartialEq)]
+pub enum ParseRarityError {
+    #[error("unknown rarity value: {0}")]
+    UnknownValue(String),
+}
+
 #[derive(Debug, PartialEq, Clone, Copy, Eq, Hash)]
 pub enum Rarity {
     Common,
@@ -8,33 +14,22 @@ pub enum Rarity {
     Legendary,
 }
 
-// impl Debug for Rarity {
-//     fn fmt(&self, f: &mut Formatter) -> Result {
-//         match self {
-//             Rarity::Common => write!(f, "Common"),
-//             Rarity::Rare => write!(f, "Rare"),
-//             Rarity::Epic => write!(f, "Epic"),
-//             Rarity::Legendary => write!(f, "Legendary"),
-//         }
-//     }
-// }
+impl TryFrom<&str> for Rarity {
+    type Error = ParseRarityError;
+    fn try_from(value: &str) -> Result<Self, Self::Error> {
+        Self::try_from(value.to_string())
+    }
+}
 
-// impl PartialEq for Rarity {
-//     fn eq(&self, other: &Self) -> bool {
-//         matches!(
-//             (self, other),
-//             (Rarity::Common, Rarity::Common)
-//                 | (Rarity::Rare, Rarity::Rare)
-//                 | (Rarity::Epic, Rarity::Epic)
-//                 | (Rarity::Legendary, Rarity::Legendary)
-//         )
-//     }
-// }
-
-// impl Copy for Rarity {}
-
-// impl Clone for Rarity {
-//     fn clone(&self) -> Self {
-//         *self
-//     }
-// }
+impl TryFrom<String> for Rarity {
+    type Error = ParseRarityError;
+    fn try_from(value: String) -> Result<Self, Self::Error> {
+        match value.to_lowercase().as_str() {
+            "common" => Ok(Self::Common),
+            "rare" => Ok(Self::Rare),
+            "epic" => Ok(Self::Epic),
+            "legendary" => Ok(Self::Legendary),
+            _ => Err(ParseRarityError::UnknownValue(value)),
+        }
+    }
+}

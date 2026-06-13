@@ -31,7 +31,9 @@ fn factorial(n: u32) -> u128 {
 impl Backpack {
     pub fn new(max_weight: u32) -> Result<Self, InventoryError> {
         if max_weight == 0 {
-            return Err(InventoryError::InvalidMaxWeight);
+            return Err(InventoryError::InvalidMaxWeight(
+                "cannot be equal to 0".into(),
+            ));
         }
 
         Ok(Self {
@@ -95,8 +97,12 @@ impl Backpack {
     }
 
     pub fn set_max_weight(&mut self, max_weight: u32) -> Result<(), InventoryError> {
-        if self.total_weight() > max_weight {
-            return Err(InventoryError::WouldExceedCapacity);
+        let total_weight = self.total_weight();
+        if total_weight > max_weight {
+            return Err(InventoryError::WouldExceedCapacity(format!(
+                "{} cannot fit in {}",
+                max_weight, total_weight
+            )));
         }
 
         self.max_weight = max_weight;

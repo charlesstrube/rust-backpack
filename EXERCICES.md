@@ -85,11 +85,11 @@ Pas de test dédié — ce helper est l'**outil** qui rend les tests de Phase 3 
 ## Phase 3 — Arithmétique sécurisée, casting, factorielle
 Concepts : overflow/underflow, saturating arithmetic, as casting, factorial, while/for
 
-- [ ] `Backpack::total_weight_saturating(&self) -> u32` avec `saturating_add`
-- [ ] `Backpack::total_weight_checked(&self) -> Option<u32>` avec `checked_add`
-- [ ] `Backpack::average_weight(&self) -> f64` (utilise un cast `as f64`)
-- [ ] Helper libre `fn factorial(n: u32) -> u128` (boucle `for` ou `while`)
-- [ ] `Backpack::slot_combinations(&self, slots: u32) -> u128` qui appelle `factorial`
+- [x] `Backpack::total_weight_saturating(&self) -> u32` avec `saturating_add`
+- [x] `Backpack::total_weight_checked(&self) -> Option<u32>` avec `checked_add`
+- [x] `Backpack::average_weight(&self) -> f64` (utilise un cast `as f64`)
+- [x] Helper libre `fn factorial(n: u32) -> u128` (boucle `for` ou `while`)
+- [x] `Backpack::slot_combinations(&self, slots: u32) -> u128` qui appelle `factorial`
 
 Tests :
 - `total_weight_saturating_caps_at_u32_max`
@@ -104,11 +104,11 @@ Tests :
 ## Phase 4 — Macros `derive` et règle de l'orphelin
 Concepts : derive macros, orphan rule, Copy, Clone, Eq, Hash
 
-- [ ] Remplacer tous les `impl Debug`, `impl PartialEq`, `impl Clone`, `impl Copy` manuels par `#[derive(...)]` sur `Rarity`, `ItemKind`, `Item`, `InventoryError`
-- [ ] Ajouter `Eq` et `Hash` au derive de `Rarity` (requis Phase 12)
-- [ ] Ajouter `Clone` au derive de `Item` (requis Phases 9, 13)
-- [ ] Conserver `impl Display for ItemKind` manuel
-- [ ] Ajouter un commentaire en anglais dans le code qui explique pourquoi `impl Display for Vec<Item>` est interdit (orphan rule)
+- [x] Remplacer tous les `impl Debug`, `impl PartialEq`, `impl Clone`, `impl Copy` manuels par `#[derive(...)]` sur `Rarity`, `ItemKind`, `Item`, `InventoryError`
+- [x] Ajouter `Eq` et `Hash` au derive de `Rarity` (requis Phase 12)
+- [x] Ajouter `Clone` au derive de `Item` (requis Phases 9, 13)
+- [x] Conserver `impl Display for ItemKind` manuel
+- [x] Ajouter un commentaire en anglais dans le code qui explique pourquoi `impl Display for Vec<Item>` est interdit (orphan rule)
 
 Test :
 - `rarity_works_as_hashmap_key` — petit smoke test qui insère deux `Rarity` dans un `HashMap`
@@ -118,8 +118,8 @@ Test :
 ## Phase 5 — `thiserror`, trait `Error`, chaîne `source`
 Concepts : packages, dependencies, thiserror, Error trait, error source
 
-- [ ] `cargo add thiserror`
-- [ ] Réécrire `InventoryError` avec `#[derive(thiserror::Error, Debug)]` et un `#[error("...")]` par variante
+- [x] `cargo add thiserror`
+- [x] Réécrire `InventoryError` avec `#[derive(thiserror::Error, Debug)]` et un `#[error("...")]` par variante
 - [ ] Ajouter un variant `Parse(#[from] ParseRarityError)` (le type sera créé en Phase 6) pour que `?` convertisse automatiquement
 - [ ] `InventoryError::source()` doit renvoyer la cause interne pour le variant `Parse`
 
