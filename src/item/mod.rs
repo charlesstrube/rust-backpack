@@ -1,6 +1,7 @@
 pub mod item_kind;
 pub mod item_name;
 pub mod item_weight;
+pub mod utils;
 
 use crate::{error::InventoryError, rarity::Rarity};
 use item_kind::ItemKind;

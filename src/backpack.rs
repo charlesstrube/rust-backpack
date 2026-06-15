@@ -1,8 +1,10 @@
+use std::ops::{Index, IndexMut};
 use std::sync::atomic::AtomicU32;
 
 use crate::error::InventoryError;
 use crate::item::Item;
 use crate::item::item_kind::ItemKind;
+use crate::item::utils::get_total_weight;
 use crate::rarity::Rarity;
 
 pub struct Backpack {
@@ -14,10 +16,6 @@ pub struct Backpack {
      */
     items: Vec<Item>,
     max_weight: u32,
-}
-
-fn get_total_weight(items: &[Item]) -> u32 {
-    items.iter().fold(0, |acc, item| acc + item.weight())
 }
 
 fn factorial(n: u32) -> u128 {
@@ -248,6 +246,28 @@ impl Backpack {
             .iter()
             .filter(|&item| matches!(item.kind(), ItemKind::Weapon { damage: _damage }))
             .collect()
+    }
+}
+
+impl Index<usize> for Backpack {
+    type Output = Item;
+    fn index(&self, index: usize) -> &Self::Output {
+        &self.items[index]
+    }
+}
+impl Index<&str> for Backpack {
+    type Output = Item;
+    fn index(&self, name: &str) -> &Self::Output {
+        match &self.find_by_name(name) {
+            Some(item) => item,
+            None => panic!("no item found"),
+        }
+    }
+}
+
+impl IndexMut<usize> for Backpack {
+    fn index_mut(&mut self, index: usize) -> &mut Self::Output {
+        &mut self.items[index]
     }
 }
 
@@ -690,38 +710,38 @@ mod tests {
     // PHASE 10 — Index / IndexMut
     // =====================================================================
 
-    // #[test]
-    // fn index_by_position_returns_item() {
-    //     let mut bag = Backpack::new(100).unwrap();
-    //     bag.add_item(sword()).unwrap();
-    //     bag.add_item(potion()).unwrap();
-    //     assert_eq!(bag[0].name(), "Sword");
-    //     assert_eq!(bag[1].name(), "Health Potion");
-    // }
+    #[test]
+    fn index_by_position_returns_item() {
+        let mut bag = Backpack::new(100).unwrap();
+        bag.add_item(sword()).unwrap();
+        bag.add_item(potion()).unwrap();
+        assert_eq!(bag[0].name(), "Sword");
+        assert_eq!(bag[1].name(), "Health Potion");
+    }
 
-    // #[test]
-    // fn index_by_name_returns_item() {
-    //     let mut bag = Backpack::new(100).unwrap();
-    //     bag.add_item(sword()).unwrap();
-    //     bag.add_item(potion()).unwrap();
-    //     assert_eq!(bag["Sword"].weight(), 5);
-    //     assert_eq!(bag["Health Potion"].weight(), 1);
-    // }
+    #[test]
+    fn index_by_name_returns_item() {
+        let mut bag = Backpack::new(100).unwrap();
+        bag.add_item(sword()).unwrap();
+        bag.add_item(potion()).unwrap();
+        assert_eq!(bag["Sword"].weight(), 5);
+        assert_eq!(bag["Health Potion"].weight(), 1);
+    }
 
-    // #[test]
-    // #[should_panic]
-    // fn index_by_unknown_name_panics() {
-    //     let bag = Backpack::new(100).unwrap();
-    //     let _ = &bag["NotHere"];
-    // }
+    #[test]
+    #[should_panic]
+    fn index_by_unknown_name_panics() {
+        let bag = Backpack::new(100).unwrap();
+        let _ = &bag["NotHere"];
+    }
 
-    // #[test]
-    // fn index_mut_allows_field_update() {
-    //     let mut bag = Backpack::new(100).unwrap();
-    //     bag.add_item(sword()).unwrap();
-    //     bag[0] = potion();
-    //     assert_eq!(bag[0].name(), "Health Potion");
-    // }
+    #[test]
+    fn index_mut_allows_field_update() {
+        let mut bag = Backpack::new(100).unwrap();
+        bag.add_item(sword()).unwrap();
+        bag[0] = potion();
+        assert_eq!(bag[0].name(), "Health Potion");
+    }
 
     // =====================================================================
     // PHASE 11 — Backpack::add (operator overloading)
