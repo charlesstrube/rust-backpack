@@ -160,6 +160,21 @@ impl Backpack {
         self.items.reserve(additional)
     }
 
+    /**
+     *`I` is a generic parameter: the caller picks a different concrete type at each call site
+     * (Vec<Item>, [Item; N], iterator chains, ...).
+     * `Item` in `IntoIterator<Item = Item>` is an associated type: for a given `I`, the trait
+     * implementation fixes it to exactly one type. Here we constrain it to equal our crate's
+     * `Item` so the iterator must yield our items
+     */
+    pub fn add_many<I: IntoIterator<Item = Item>>(
+        &mut self,
+        items: I,
+    ) -> Result<(), InventoryError> {
+        let items_list: Vec<Item> = items.into_iter().collect();
+        self.bulk_add(&items_list)
+    }
+
     fn get_by_rarity(&self, rarity: Rarity) -> Vec<&Item> {
         self.items()
             .iter()
@@ -880,29 +895,29 @@ mod tests {
     // PHASE 13 — Generics & trait bounds
     // =====================================================================
 
-    // #[test]
-    // fn add_many_accepts_vec() {
-    //     let mut bag = Backpack::new(100).unwrap();
-    //     let items = vec![sword(), potion()];
-    //     bag.add_many(items).unwrap();
-    //     assert_eq!(bag.as_slice().len(), 2);
-    // }
+    #[test]
+    fn add_many_accepts_vec() {
+        let mut bag = Backpack::new(100).unwrap();
+        let items = vec![sword(), potion()];
+        bag.add_many(items).unwrap();
+        assert_eq!(bag.as_slice().len(), 2);
+    }
 
-    // #[test]
-    // fn add_many_accepts_fixed_size_array() {
-    //     let mut bag = Backpack::new(100).unwrap();
-    //     let items: [Item; 2] = [sword(), potion()];
-    //     bag.add_many(items).unwrap();
-    //     assert_eq!(bag.as_slice().len(), 2);
-    // }
+    #[test]
+    fn add_many_accepts_fixed_size_array() {
+        let mut bag = Backpack::new(100).unwrap();
+        let items: [Item; 2] = [sword(), potion()];
+        bag.add_many(items).unwrap();
+        assert_eq!(bag.as_slice().len(), 2);
+    }
 
-    // #[test]
-    // fn add_many_accepts_iterator_chain() {
-    //     let mut bag = Backpack::new(100).unwrap();
-    //     let chain = std::iter::once(sword()).chain(std::iter::once(potion()));
-    //     bag.add_many(chain).unwrap();
-    //     assert_eq!(bag.as_slice().len(), 2);
-    // }
+    #[test]
+    fn add_many_accepts_iterator_chain() {
+        let mut bag = Backpack::new(100).unwrap();
+        let chain = std::iter::once(sword()).chain(std::iter::once(potion()));
+        bag.add_many(chain).unwrap();
+        assert_eq!(bag.as_slice().len(), 2);
+    }
 
     // =====================================================================
     // PHASE 14 — Combinators
