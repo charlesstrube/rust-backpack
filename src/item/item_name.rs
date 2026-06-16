@@ -30,6 +30,6 @@ impl Deref for ItemName {
 
 impl AsRef<str> for ItemName {
     fn as_ref(&self) -> &str {
-        &self.0.as_str()
+        self.0.as_str()
     }
 }

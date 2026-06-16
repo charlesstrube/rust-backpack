@@ -244,32 +244,32 @@ mod tests {
     // PHASE 11 — Rarity ordering (PartialOrd / Ord)
     // =====================================================================
 
-    // #[test]
-    // fn rarity_orders_common_below_legendary() {
-    //     assert!(Rarity::Common < Rarity::Rare);
-    //     assert!(Rarity::Rare < Rarity::Epic);
-    //     assert!(Rarity::Epic < Rarity::Legendary);
-    // }
+    #[test]
+    fn rarity_orders_common_below_legendary() {
+        assert!(Rarity::Common < Rarity::Rare);
+        assert!(Rarity::Rare < Rarity::Epic);
+        assert!(Rarity::Epic < Rarity::Legendary);
+    }
 
-    // #[test]
-    // fn rarity_sort_ascending_puts_common_first() {
-    //     let mut v = vec![
-    //         Rarity::Legendary,
-    //         Rarity::Common,
-    //         Rarity::Epic,
-    //         Rarity::Rare,
-    //     ];
-    //     v.sort();
-    //     assert_eq!(
-    //         v,
-    //         vec![
-    //             Rarity::Common,
-    //             Rarity::Rare,
-    //             Rarity::Epic,
-    //             Rarity::Legendary,
-    //         ]
-    //     );
-    // }
+    #[test]
+    fn rarity_sort_ascending_puts_common_first() {
+        let mut v = vec![
+            Rarity::Legendary,
+            Rarity::Common,
+            Rarity::Epic,
+            Rarity::Rare,
+        ];
+        v.sort();
+        assert_eq!(
+            v,
+            vec![
+                Rarity::Common,
+                Rarity::Rare,
+                Rarity::Epic,
+                Rarity::Legendary,
+            ]
+        );
+    }
 
     // =====================================================================
     // PHASE 14 — Item::parse_compact (let-else)

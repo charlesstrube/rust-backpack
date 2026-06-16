@@ -33,3 +33,25 @@ impl TryFrom<String> for Rarity {
         }
     }
 }
+
+fn get_rarity_index(rarity: &Rarity) -> usize {
+    match rarity {
+        Rarity::Common => 0,
+        Rarity::Rare => 1,
+        Rarity::Epic => 2,
+        Rarity::Legendary => 3,
+    }
+}
+
+impl PartialOrd for Rarity {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl Ord for Rarity {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        let self_index = get_rarity_index(self);
+        return self_index.cmp(&get_rarity_index(other));
+    }
+}

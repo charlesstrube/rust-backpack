@@ -1,5 +1,6 @@
 use crate::item::{Item, item_kind::ItemKind};
 
+#[allow(unused)]
 pub struct ItemSummary {
     name: String,
     value: u32,

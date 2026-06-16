@@ -1,4 +1,4 @@
-use std::ops::{Index, IndexMut};
+use std::ops::{Add, Index, IndexMut};
 use std::sync::atomic::AtomicU32;
 
 use crate::error::InventoryError;
@@ -76,7 +76,7 @@ impl Backpack {
         let mut list: Vec<&Item> = Vec::new();
 
         for item in &self.items {
-            list.push(&item);
+            list.push(item);
         }
 
         list.sort_by(|a, b| {
@@ -249,12 +249,38 @@ impl Backpack {
     }
 }
 
+impl Add<Backpack> for Backpack {
+    type Output = Backpack;
+    fn add(self, rhs: Backpack) -> Self::Output {
+        let new_max_weight = self.max_weight.saturating_add(rhs.max_weight());
+        let left_weight = self.total_weight();
+        let right_weight = rhs.total_weight();
+        if left_weight + right_weight > new_max_weight {
+            panic!("weight cannot go behind u32 when adding")
+        }
+
+        let Ok(mut backpack) = Self::new(new_max_weight) else {
+            panic!("err")
+        };
+
+        if backpack.bulk_add(self.items()).is_err() {
+            panic!("no")
+        }
+        if backpack.bulk_add(rhs.items()).is_err() {
+            panic!("no")
+        }
+
+        backpack
+    }
+}
+
 impl Index<usize> for Backpack {
     type Output = Item;
     fn index(&self, index: usize) -> &Self::Output {
         &self.items[index]
     }
 }
+
 impl Index<&str> for Backpack {
     type Output = Item;
     fn index(&self, name: &str) -> &Self::Output {
@@ -298,6 +324,7 @@ impl Drop for Backpack {
     }
 }
 
+#[allow(unused)]
 pub fn dropped_count() -> u32 {
     DROPPED.load(std::sync::atomic::Ordering::Relaxed)
 }
@@ -747,16 +774,16 @@ mod tests {
     // PHASE 11 — Backpack::add (operator overloading)
     // =====================================================================
 
-    // #[test]
-    // fn backpack_add_merges_max_weight_and_items() {
-    //     let mut a = Backpack::new(50).unwrap();
-    //     let mut b = Backpack::new(30).unwrap();
-    //     a.add_item(sword()).unwrap();
-    //     b.add_item(potion()).unwrap();
-    //     let merged = a + b;
-    //     assert_eq!(merged.max_weight(), 80);
-    //     assert_eq!(merged.as_slice().len(), 2);
-    // }
+    #[test]
+    fn backpack_add_merges_max_weight_and_items() {
+        let mut a = Backpack::new(50).unwrap();
+        let mut b = Backpack::new(30).unwrap();
+        a.add_item(sword()).unwrap();
+        b.add_item(potion()).unwrap();
+        let merged = a + b;
+        assert_eq!(merged.max_weight(), 80);
+        assert_eq!(merged.as_slice().len(), 2);
+    }
 
     // =====================================================================
     // PHASE 12 — HashMap / BTreeMap
