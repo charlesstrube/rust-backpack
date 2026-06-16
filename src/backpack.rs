@@ -161,6 +161,29 @@ impl Backpack {
     }
 
     /**
+     * parse_compact(s: &str) -> Result<Item, InventoryError>` qui parse `"Sword|weapon:50|epic|5"` en utilisant `let ... else { return Err(...) }` au moins deux fois (sur le split et sur les conversions)
+     */
+    pub fn parse_compact(s: &str) -> Result<Item, InventoryError> {
+        let params: Vec<&str> = s.split("|").collect();
+
+        let &[name, kind, rarity, weight] = params.as_slice() else {
+            return Err(InventoryError::ParseItem(format!(
+                "param count miss match {}",
+                s
+            )));
+        };
+        let kind = ItemKind::try_from(kind)?;
+        let rarity = Rarity::try_from(rarity)?;
+        let Ok(weight) = weight.parse() else {
+            return Err(InventoryError::ParseItem(format!(
+                "cannot parse weight: {}",
+                weight
+            )));
+        };
+        Item::new(name, kind, rarity, weight)
+    }
+
+    /**
      *`I` is a generic parameter: the caller picks a different concrete type at each call site
      * (Vec<Item>, [Item; N], iterator chains, ...).
      * `Item` in `IntoIterator<Item = Item>` is an associated type: for a given `I`, the trait
@@ -310,6 +333,17 @@ impl Backpack {
             .iter()
             .filter(|&item| matches!(item.kind(), ItemKind::Weapon { damage: _damage }))
             .collect()
+    }
+
+    // via `filter_map` + `sum`
+    pub fn total_damage(&self) -> u32 {
+        self.items()
+            .iter()
+            .filter_map(|item| match item.kind() {
+                ItemKind::Weapon { damage } => Some(damage),
+                _ => None,
+            })
+            .sum()
     }
 }
 
@@ -923,21 +957,21 @@ mod tests {
     // PHASE 14 — Combinators
     // =====================================================================
 
-    // #[test]
-    // fn total_damage_sums_only_weapon_damage() {
-    //     let mut bag = Backpack::new(100).unwrap();
-    //     bag.add_item(sword()).unwrap();   // 50
-    //     bag.add_item(dagger()).unwrap();  // 15
-    //     bag.add_item(potion()).unwrap();  // not a weapon
-    //     bag.add_item(shield()).unwrap();  // not a weapon
-    //     assert_eq!(bag.total_damage(), 65);
-    // }
+    #[test]
+    fn total_damage_sums_only_weapon_damage() {
+        let mut bag = Backpack::new(100).unwrap();
+        bag.add_item(sword()).unwrap(); // 50
+        bag.add_item(dagger()).unwrap(); // 15
+        bag.add_item(potion()).unwrap(); // not a weapon
+        bag.add_item(shield()).unwrap(); // not a weapon
+        assert_eq!(bag.total_damage(), 65);
+    }
 
-    // #[test]
-    // fn total_damage_is_zero_without_weapons() {
-    //     let mut bag = Backpack::new(100).unwrap();
-    //     bag.add_item(potion()).unwrap();
-    //     bag.add_item(shield()).unwrap();
-    //     assert_eq!(bag.total_damage(), 0);
-    // }
+    #[test]
+    fn total_damage_is_zero_without_weapons() {
+        let mut bag = Backpack::new(100).unwrap();
+        bag.add_item(potion()).unwrap();
+        bag.add_item(shield()).unwrap();
+        assert_eq!(bag.total_damage(), 0);
+    }
 }

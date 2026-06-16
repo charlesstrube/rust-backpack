@@ -17,6 +17,8 @@ pub enum InventoryError {
     WouldExceedCapacity(String),
     #[error("Ivalid name: {0}")]
     InvalidName(String),
+    #[error("Invalid string parsing: {0}")]
+    ParseItem(String),
     #[error("Invalid item weight: {0}")]
     InvalidWeight(String),
     #[error("Rarity parsing error")]
