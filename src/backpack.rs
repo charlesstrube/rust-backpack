@@ -1,3 +1,4 @@
+use std::collections::{BTreeMap, HashMap};
 use std::ops::{Add, Index, IndexMut};
 use std::sync::atomic::AtomicU32;
 
@@ -157,6 +158,54 @@ impl Backpack {
 
     pub fn reserve(&mut self, additional: usize) {
         self.items.reserve(additional)
+    }
+
+    fn get_by_rarity(&self, rarity: Rarity) -> Vec<&Item> {
+        self.items()
+            .iter()
+            .filter(|item| item.rarity() == rarity)
+            .collect()
+    }
+
+    pub fn group_by_rarity(&self) -> HashMap<Rarity, Vec<&Item>> {
+        let mut map = HashMap::new();
+
+        for rarity in [
+            Rarity::Common,
+            Rarity::Rare,
+            Rarity::Epic,
+            Rarity::Legendary,
+        ] {
+            let items = self.get_by_rarity(rarity);
+            if !items.is_empty() {
+                map.insert(rarity, items);
+            }
+        }
+
+        map
+    }
+
+    pub fn weights_by_value(&self) -> BTreeMap<u32, Vec<&Item>> {
+        self.items().iter().fold(BTreeMap::new(), |mut map, item| {
+            if let Some(value) = map.get_mut(&item.weight()) {
+                value.push(item)
+            } else {
+                map.insert(item.weight(), vec![item]);
+            }
+            map
+        })
+    }
+
+    pub fn most_common_rarity(&self) -> Option<Rarity> {
+        let mut rarities = HashMap::new();
+        for item in self.items() {
+            rarities
+                .entry(item.rarity())
+                .and_modify(|value| *value += 1)
+                .or_insert(1);
+        }
+
+        rarities.iter().max_by_key(|&(_, v)| v).map(|(k, _)| *k)
     }
 
     pub fn total_weight_saturating(&self) -> u32 {
@@ -789,43 +838,43 @@ mod tests {
     // PHASE 12 — HashMap / BTreeMap
     // =====================================================================
 
-    // #[test]
-    // fn group_by_rarity_buckets_correctly() {
-    //     let mut bag = Backpack::new(100).unwrap();
-    //     bag.add_item(sword()).unwrap();   // Epic
-    //     bag.add_item(potion()).unwrap();  // Common
-    //     bag.add_item(dagger()).unwrap();  // Common
-    //     let groups = bag.group_by_rarity();
-    //     assert_eq!(groups.get(&Rarity::Common).unwrap().len(), 2);
-    //     assert_eq!(groups.get(&Rarity::Epic).unwrap().len(), 1);
-    //     assert!(groups.get(&Rarity::Legendary).is_none());
-    // }
+    #[test]
+    fn group_by_rarity_buckets_correctly() {
+        let mut bag = Backpack::new(100).unwrap();
+        bag.add_item(sword()).unwrap(); // Epic
+        bag.add_item(potion()).unwrap(); // Common
+        bag.add_item(dagger()).unwrap(); // Common
+        let groups = bag.group_by_rarity();
+        assert_eq!(groups.get(&Rarity::Common).unwrap().len(), 2);
+        assert_eq!(groups.get(&Rarity::Epic).unwrap().len(), 1);
+        assert!(groups.get(&Rarity::Legendary).is_none());
+    }
 
-    // #[test]
-    // fn weights_by_value_orders_keys_ascending() {
-    //     let mut bag = Backpack::new(100).unwrap();
-    //     bag.add_item(shield()).unwrap();  // 10
-    //     bag.add_item(sword()).unwrap();   // 5
-    //     bag.add_item(potion()).unwrap();  // 1
-    //     let map = bag.weights_by_value();
-    //     let keys: Vec<u32> = map.keys().copied().collect();
-    //     assert_eq!(keys, vec![1, 5, 10]);
-    // }
+    #[test]
+    fn weights_by_value_orders_keys_ascending() {
+        let mut bag = Backpack::new(100).unwrap();
+        bag.add_item(shield()).unwrap(); // 10
+        bag.add_item(sword()).unwrap(); // 5
+        bag.add_item(potion()).unwrap(); // 1
+        let map = bag.weights_by_value();
+        let keys: Vec<u32> = map.keys().copied().collect();
+        assert_eq!(keys, vec![1, 5, 10]);
+    }
 
-    // #[test]
-    // fn most_common_rarity_returns_top_bucket() {
-    //     let mut bag = Backpack::new(100).unwrap();
-    //     bag.add_item(potion()).unwrap();  // Common
-    //     bag.add_item(dagger()).unwrap();  // Common
-    //     bag.add_item(sword()).unwrap();   // Epic
-    //     assert_eq!(bag.most_common_rarity(), Some(Rarity::Common));
-    // }
+    #[test]
+    fn most_common_rarity_returns_top_bucket() {
+        let mut bag = Backpack::new(100).unwrap();
+        bag.add_item(potion()).unwrap(); // Common
+        bag.add_item(dagger()).unwrap(); // Common
+        bag.add_item(sword()).unwrap(); // Epic
+        assert_eq!(bag.most_common_rarity(), Some(Rarity::Common));
+    }
 
-    // #[test]
-    // fn most_common_rarity_returns_none_for_empty() {
-    //     let bag = Backpack::new(100).unwrap();
-    //     assert!(bag.most_common_rarity().is_none());
-    // }
+    #[test]
+    fn most_common_rarity_returns_none_for_empty() {
+        let bag = Backpack::new(100).unwrap();
+        assert!(bag.most_common_rarity().is_none());
+    }
 
     // =====================================================================
     // PHASE 13 — Generics & trait bounds
